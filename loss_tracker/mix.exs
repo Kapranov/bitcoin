@@ -50,7 +50,11 @@ defmodule LossTracker.MixProject do
       {:credo, "~> 0.9.2", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.8", only: :test},
       {:mix_test_watch, "~> 0.6", only: :dev, runtime: false},
-      {:ex_unit_notifier, "~> 0.1.4", only: :test}
+      {:ex_unit_notifier, "~> 0.1.4", only: :test},
+      {:cowboy, "~> 2.4.0"},
+      {:plug, "~> 1.5.0"},
+      {:httpoison, "~> 1.1.1"},
+      {:poison, "~> 3.1.0"}
     ]
   end
 end

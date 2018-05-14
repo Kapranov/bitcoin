@@ -59,8 +59,8 @@ see how easy it is to use Plug directly.
 We are going  to build a simple  website displaying the current price of
 Bitcoin  and calculating  the  maximum  possible  loss  one  could  make
 assuming they  invested in Bitcoin  on the day it reached its peak price
-(at the time of writing the highest Bitcoin price ever was $19,498.63 on
-14/05/2018). Instead of instinctively reaching  for  Phoenix, we'll only
+(at the time of writing the highest Bitcoin price ever was $17,032.63 on
+15/05/2018). Instead of instinctively reaching  for  Phoenix, we'll only
 use Plug and see how easy the process is. The sketch below  is  a simple
 illustration of what we aim to achieve.
 
@@ -79,8 +79,36 @@ It is a fairly simple project which will serve us well as an example.
 
 ### Code
 
-Lwt's start by creating a new `mix` project. We'll use the `--sup` flag
+Let's start by creating  a new `mix` project. We'll use the `--sup` flag
 to include a supervision tree. `mix new loss_tracker --sup`
+
+We  need  to  add  some  dependencies  to the `mix.exs` file. Other than
+including `plug` we will also add `cowboy` (the web server), `httpoison`
+(making HTTP requests to be Bitcoin price server)  and `poison` (parsing
+JSON).   Don't  forget  to  run  `mix  deps.get`  to  install  the   new
+dependencies.
+
+```elixir
+defmodule LossTracker.MixProject do
+  use Mix.Project
+
+  # ...
+
+  defp deps do
+    [
+      {:ex_doc, "~> 0.18.3", only: :dev, runtime: false},
+      {:credo, "~> 0.9.2", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.8", only: :test},
+      {:mix_test_watch, "~> 0.6", only: :dev, runtime: false},
+      {:ex_unit_notifier, "~> 0.1.4", only: :test},
+      {:cowboy, "~> 2.4.0"},
+      {:plug, "~> 1.5.0"},
+      {:httpoison, "~> 1.1.1"},
+      {:poison, "~> 3.1.0"}
+    ]
+  end
+end
+```
 
 **TODO: Add description**
 
