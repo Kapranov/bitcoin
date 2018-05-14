@@ -109,6 +109,158 @@ defmodule LossTracker.MixProject do
   end
 end
 ```
+I'm using Exlixir `1.6.5` here. If you are using `1.3` or lower remember
+to update your `applications` function too.
+
+Now open up `lib/loss_tracker/application.ex` and tell our application
+to start Plug and integrate with Cowboy.
+
+```elixir
+defmodule LossTracker.Application do
+  @moduledoc false
+
+  alias LossTracker.Router
+
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      Plug.Adapters.Cowboy.child_spec(
+        scheme: :http,
+        plug: Router,
+        options: [port: 4001]
+      )
+    ]
+
+    opts = [strategy: :one_for_one, name: LossTracker.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
+Here we tell Plug to integrate with Cowboy and pass all incoming traffic
+to `LossTracker.Router`.  All  requests  will be delivered to the router
+as  `Conn`  structs  we  talked  about  earlier. We have not written our
+router yet so we’ll look at it next.
+
+```elixir
+defmodule LossTracker.Router do
+  use Plug.Router
+
+  alias LossTracker.PageProcessor
+
+  plug :match
+  plug :dispatch
+
+  get "/about" do
+    send_resp(conn, 200, "This is a demo site")
+  end
+
+  match _ do
+    PageProcessor.call(conn, PageProcessor.init([]))
+  end
+end
+```
+
+The  router is the first plug  that our conn struct will encounter. This
+is also where we get to see the first example of how easily plugs can be
+used and chained together. We tell the router to pipe our `conn` through
+two plugs: `match` and `dispatch`.  These two plugs are provided by Plug
+and  take care of matching  the request's path and dispatching it to the
+correct route handler. If you wanted to modify this behaviour  you could
+write your own plugs and include them in there too.
+
+Within the router, we specify two route handlers. The first one is an
+example of how the Plug router works - it matches GET requests sent to
+`/about`. Whenever a user navigates to that URL the `conn` struct will
+be passed to `send_resp` which, in turn, will set the response code to
+200 and put a short string in the response's body using a special
+`send_resp` function. It is special because instead of simply returning
+a slightly modified `conn`, like most plugs do, it immediately sends the
+response back to the caller.
+
+The second route handler matches all other URLs and will pass the conn
+to the `PageProcessor` *module plug* which we are going to write next.
+
+```elixir
+defmodule LossTracker.PageProcessor do
+  import Plug.Conn
+
+  alias LossTracker.BitcoinAPI
+
+  def init(options), do: options
+
+  def call(conn, _opts) do
+    conn
+    |> calculate_loss()
+    |> build_page()
+  end
+
+  defp calculate_loss(conn) do
+    current_price = BitcoinAPI.current_price()
+    current_loss = BitcoinAPI.current_loss(current_price)
+
+    conn
+    |> assign(:current_price, current_price)
+    |> assign(:current_loss, current_loss)
+  end
+
+  defp build_page(conn) do
+    conn
+    |> put_resp_content_type("text/html")
+    |> send_resp(200, render_page(conn))
+  end
+
+  defp render_page(conn) do
+    """
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Bitcoin loss tracker</title>
+        <style>
+          html {
+            background-color: #252839;
+            color: #f2b632;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            font-size: 24px;
+            text-align: center;
+          }
+          div {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 3rem;
+            border: 6px solid #f2b632;
+            border-radius: 6px;
+          }
+          p {
+          margin: 1rem 0;
+          }
+          p:first-of-type {
+            font-size: 0.8rem;
+            line-height: 1rem;
+          }
+          p:last-of-type {
+            font-size: 1.4rem;
+          }
+          .percentage {
+            font-weight: 700;
+            font-size: 1.8rem;
+          }
+        </style>
+      </head>
+      <body>
+        <div>
+          <p>On December 17th 2017 Bitcoin price reached $#{BitcoinAPI.max_price()}</p>
+          <p>Current Bitcoin value is $#{conn.assigns[:current_price]}</p>
+          <p>You could have lost <span class="percentage">#{:erlang.float_to_binary(conn.assigns[:current_loss], [decimals: 1])}%</span> of your money!</p>
+        </div>
+      </body>
+    </html>
+    """
+  end
+end
+```
 
 **TODO: Add description**
 
