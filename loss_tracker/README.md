@@ -1,5 +1,7 @@
 # LossTracker
 
+![Plugs Demystified](./bitcoin.jpg)
+
 *Plugs Demystified*
 
 Understand Plug and build a simple website using Elixir.
@@ -346,8 +348,6 @@ mix test
 mix run --no-halt
 iex -S mix
 ```
-
-![Plugs Demystified](./bitcoin.jpg)
 
 ### 15 May 2018 by Oleg G.Kapranov
 
