@@ -69,7 +69,7 @@ defmodule LossTracker.PageProcessor do
       </head>
       <body>
         <div>
-          <p>On December 17th 2017 Bitcoin price reached $#{BitcoinAPI.max_price()}</p>
+          <p>On May 15th 2018 Bitcoin price reached $#{BitcoinAPI.max_price()}</p>
           <p>Current Bitcoin value is $#{conn.assigns[:current_price]}</p>
           <p>You could have lost <span class="percentage">#{:erlang.float_to_binary(conn.assigns[:current_loss], [decimals: 1])}%</span> of your money!</p>
         </div>

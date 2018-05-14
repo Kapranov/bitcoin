@@ -67,7 +67,7 @@ illustration of what we aim to achieve.
 ```sh
 ╔═════════════════════════════════════════════════════════════════════╗
 ║                                                                     ║
-║          On May 15th 2018 Bitcoin price reached $17032,775          ║
+║          On May 15th 2018 Bitcoin price reached $17032,78           ║
 ║                 Current Bitcoin value is $8425.23                   ║
 ║                                                                     ║
 ║              YOU COULD HAVE LOST -1.45% OF YOUR MONEY!              ║
@@ -251,7 +251,7 @@ defmodule LossTracker.PageProcessor do
       </head>
       <body>
         <div>
-          <p>On December 17th 2017 Bitcoin price reached $#{BitcoinAPI.max_price()}</p>
+          <p>On May 15th 2018 Bitcoin price reached $#{BitcoinAPI.max_price()}</p>
           <p>Current Bitcoin value is $#{conn.assigns[:current_price]}</p>
           <p>You could have lost <span class="percentage">#{:erlang.float_to_binary(conn.assigns[:current_loss], [decimals: 1])}%</span> of your money!</p>
         </div>
@@ -262,14 +262,92 @@ defmodule LossTracker.PageProcessor do
 end
 ```
 
+The `PageProcessor` here is where the  response  is  put  together.  Its
+`call` function  accepts  a  `conn` and modifies it in a number of ways.
+First, it  passes the  `conn` to  `calculate_loss` where  it obtains the
+current  price and current  maximum  possible loss from the `BitcoinAPI`
+module and puts them  in the  `conn`  to be used later. `Conn`  structs,
+apart from carrying information about requests  and  responses, can also
+carry  other  arbitrary  data.  This  is exactly what we tell our `conn`
+to do here by calling `assign`.
+
+The `conn` is then passed to `build_page` where it is assigned a content
+type of `text/html` and used  to send a response back to the caller. The
+response is given a 200 status code and a body.
+
+The  body  of  the  response  is  HTML  returned  from the `render_page`
+function.  It  prints  the current  price  of  Bitcoin and  the  maximum
+possible loss on the page and applies some styling to it.
+
+Finally, the `BitcoinAPI` module. This is the only part  of our app that
+doesn't use plugs.  It  is a simple  interface  for fetching the current
+Bitcoin price from one of the Bitcoin trading platforms which provides a
+free API.
+
+```elixir
+defmodule LossTracker.BitcoinAPI do
+  @moduledoc false
+
+  @max_price 17_032.78
+  @api_url "https://www.bitstamp.net/api/ticker/"
+
+  def current_loss(current_price) do
+    (@max_price - current_price) / @max_price * 100
+  end
+
+  def current_price do
+    case HTTPoison.get(@api_url) do
+      {:ok, response} ->
+        response.body
+        |> Poison.decode!
+        |> Map.get("last")
+        |> String.to_float
+      {:error, _} ->
+        nil
+    end
+  end
+
+  def max_price do
+    @max_price
+  end
+end
+```
+
+This is it!  Start the server with `mix run --no-halt` or  `iex -S mix`
+if  you  want  to  play  around  in  the  IEx console) and navigate to:
+`localhost:4001`.  You should see something similar to the image below.
+
+### Summary
+
+In this short demo,  we  have  had a look at what Plug library is, what
+tools  it provides and how they can be used to put together a basic web
+application. We have seen that Plug gives us everything needed to build
+a simple website, even without using Phoenix.  Of course, the ecosystem
+is not perfect and is devoid of numerous  Phoenix's  eatures.  This  is
+because  Plug  is not meant to be a web framework. Instead, it is a web
+server interface we can use to  build other things on and it is exactly
+what Phoenix does.
+
+As  an  engineer,  I  believe  it  is  important to keep  improving our
+understanding of technologies underpinning the tools we work with. Even
+if  you  are  not going to build directly on Plug, knowing how it works
+will help you leverage its power 1when working with Phoenix. After all,
+Phoenix is nothing else but a giant plug.
+
+Hubert Pompecki `hpompecki@gmail.com`
+
 **TODO: Add description**
 
 ```sh
 mix test
 
 ./run_test.sh
+
+mix run --no-halt
+iex -S mix
 ```
 
+![Plugs Demystified](/bitcoin.png "Elixir Plug")
 
 ### 15 May 2018 by Oleg G.Kapranov
 

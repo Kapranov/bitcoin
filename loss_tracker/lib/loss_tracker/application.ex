@@ -2,12 +2,13 @@ defmodule LossTracker.Application do
   @moduledoc false
 
   alias LossTracker.Router
+  alias Plug.Adapters.Cowboy
 
   use Application
 
   def start(_type, _args) do
     children = [
-      Plug.Adapters.Cowboy.child_spec(
+     Cowboy.child_spec(
         scheme: :http,
         plug: Router,
         options: [port: 4001]

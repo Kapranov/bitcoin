@@ -51,7 +51,7 @@ defmodule LossTracker.MixProject do
       {:excoveralls, "~> 0.8", only: :test},
       {:mix_test_watch, "~> 0.6", only: :dev, runtime: false},
       {:ex_unit_notifier, "~> 0.1.4", only: :test},
-      {:cowboy, "~> 2.4.0"},
+      {:cowboy, "~> 1.1.2"},
       {:plug, "~> 1.5.0"},
       {:httpoison, "~> 1.1.1"},
       {:poison, "~> 3.1.0"}
