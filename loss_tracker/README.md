@@ -347,7 +347,7 @@ mix run --no-halt
 iex -S mix
 ```
 
-![Plugs Demystified](/bitcoin.png "Elixir Plug")
+![Plugs Demystified](/bitcoin.jpg "Elixir Plug")
 
 ### 15 May 2018 by Oleg G.Kapranov
 
