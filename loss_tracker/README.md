@@ -38,6 +38,7 @@ request, or set a response code and a body.
 It  is  an  easy and efficient system - build some plugs and  chain them
 together to process an incoming `Conn`.
 
+```sh
           ╔══════════════════╗            ╔══════════════════╗
           ║       Plug 1     ║            ║       Plug 2     ║
           ╟──────────────────╢            ╟──────────────────╢
@@ -47,6 +48,7 @@ together to process an incoming `Conn`.
           ║ modified version ║            ║ modified version ║
           ║      version     ║            ║                  ║
           ╚══════════════════╝            ╚══════════════════╝
+```
 
 Plug  is, in fact, the foundation on which Phoenix  is built - Phoenix's
 controllers are just plugs!  Let's put Phoenix aside for  now though and
@@ -62,6 +64,7 @@ assuming they  invested in Bitcoin  on the day it reached its peak price
 use Plug and see how easy the process is. The sketch below  is  a simple
 illustration of what we aim to achieve.
 
+```sh
 ╔═════════════════════════════════════════════════════════════════════╗
 ║                                                                     ║
 ║          On May 15th 2018 Bitcoin price reached $17032,775          ║
@@ -70,6 +73,7 @@ illustration of what we aim to achieve.
 ║              YOU COULD HAVE LOST -1.45% OF YOUR MONEY!              ║
 ║                                                                     ║
 ╚═════════════════════════════════════════════════════════════════════╝
+```
 
 It is a fairly simple project which will serve us well as an example.
 
