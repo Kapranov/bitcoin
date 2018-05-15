@@ -45,6 +45,21 @@ Generating a keypair is as simple as calling a specific function with
 appropriate attributes:
 
 ```elixir
+defmodule BitcoinAddress do
+  @moduledoc false
+
+  def keypair do
+    with {public_key, private_key} <- :crypto.generate_key(:ecdh, :secp256k1),
+      do: {Base.encode16(public_key), Base.encode16(private_key)}
+  end
+end
+
+BitcoinAddress.keypair
+
+#=> {
+#=>   "04BC2BB248E2EFCD36A4F88050137FB531476F937D36A3351425453F8CB12DDDC3DFBB623EA414C2C9788AB2329401C3FCE0725F57154B30AD85C862A72E8882F2",
+#=>   "2BA9695DE3EF229E23A5532C673C0A2AB2E213044572EE0AC6F0556499669D1A"
+#=> }
 ```
 
 ### 15 May 2018 by Oleg G.Kapranov
