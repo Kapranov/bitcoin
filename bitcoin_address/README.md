@@ -133,18 +133,17 @@ end
 iex|1 ▶ BitcoinAddress.write
 %{
   dir: ".keys/key",
-  key:
-"049DD8AFF80EBEAB210DF5C6A11DC19CE4E27E78854EB4E96A6F78EC9CB0E6F3"
+  key: "049DD8AFF80EBEAB210DF5C6A11DC19CE4E27E78854EB4E96A6F78EC9CB0E6F3"
 }
 ```
 
 ## Signature
 
-Once you have your keypair generated and stored, you can use your
+Once  you  have  your  keypair  generated  and  stored, you can use your
 *private key*  to sign a message you want to send.
 
-Keep in mind that **you have to decode both** *private key* **and**
-*public key* from `Base16` encoded string into binary strings firstly!
+Keep  in  mind  that **you  have  to decode both** *private key* **and**
+*public key* from `Base16` encoded  string  into binary strings firstly!
 
 ```elixir
 signature = :crypto.sign(
@@ -154,8 +153,9 @@ signature = :crypto.sign(
   [private_key, :secp256k1]
 )
 ```
-With the generated *signature* we can verify if the owner of the *public
-key* actually signed the message without knowing their *private key*:
+With  the  generated   *signature*  we  can  verify  if the owner of the
+*public key*   actually  signed   the   message  without  knowing  their
+*private key*:
 
 ```elixir
 :crypto.verify(
@@ -166,6 +166,69 @@ key* actually signed the message without knowing their *private key*:
   [public_key, :secp256k1]
 )
 ```
+
+## Address
+
+From  a  technical perspective,  a **Bitcoin  address  is  a hash of the
+public  portion  of a public/private keypair**.  It's a string of digits
+and characters.
+
+It **represents a possible destination for a Bitcoin payment**  and  can
+be shared with anyone who wants to send you money. That's why it appears
+most commonly as the "recipient" of the funds.
+
+Addresses can be **generated at no cost** by any user of Bitcoin. People
+can  have  many  different addresses and a unique address should be used
+for each transaction.  Creating  them  can be done **without an Internet
+connection** and does not require any contact or  registration  with the
+Bitcoin network.
+
+The entire process looks as follows:
+
+```sh
+              Public Key to Bitcoin Address
+              ╔═══════════════════════════╗
+              ║         Public Key        ║
+              ╚══════════════╦════════════╝
+                             ║
+                  ╔          V         ╗
+                  ║ ╔════════╩═══════╗ ║
+  "Double Hash"   ║ ║     SHA256     ║ ║
+       or         ║ ╚════════╦═══════╝ ║
+    HASH160       ║          V         ║
+                  ║ ╔════════╩═══════╗ ║
+                  ║ ║   RIPEMD160    ║ ║
+                  ║ ╚════════╦═══════╝ ║
+                  ╚          ║         ╝
+                             V
+              ╔══════════════╩════════════╗
+              ║       Public Key Hash     ║
+              ║     (20 bytes/160 bits)   ║
+              ╚══════════════╦════════════╝
+                             V
+              ╔══════════════╩════════════╗
+              ║      Base58Check Encode   ║
+              ║  with 0x00 version prefix ║
+              ╚══════════════╦════════════╝
+                             ║
+                             ║
+                             V
+         ╔═══════════════════════════════════════╗
+         ║            Bitcoin Address            ║
+         ║ (Base58Check Encoded Public Key Hash) ║
+         ╚═══════════════════════════════════════╝
+```
+And it can be described programatically as:
+
+```elixir
+private_key
+|> KeyPair.to_public_key()
+|> hash_160()
+|> prepend_version_byte(network)
+|> Check.call()
+|> Encode.call()
+```
+Let's divide it into smaller steps and implement each part of it.
 
 ### 15 May 2018 by Oleg G.Kapranov
 
