@@ -102,6 +102,40 @@ BitcoinAddress.write
 #=> }
 ```
 
+The create private function by keypair, and a Map to result:
+
+```elixir
+defmodule BitcoinAddress do
+  @moduledoc false
+
+  def write do
+    private_key = keypair() |> elem(1)
+    with file_path = ".keys/key",
+      :ok <- File.write(file_path, private_key) do
+        %{"dir": file_path, "key": private_key}
+      else
+        {:error, error} -> :file.format_error(error)
+      end
+  end
+
+  defp keypair do
+    {_, private_key} =
+      with {public_key, private_key} <- :crypto.generate_key(:ecdh, :secp256k1),
+        do: {Base.encode16(public_key), Base.encode16(private_key)}
+    {:ok, private_key}
+  end
+end
+```
+
+```sh
+iex|1 ▶ BitcoinAddress.write
+%{
+  dir: ".keys/key",
+  key:
+"049DD8AFF80EBEAB210DF5C6A11DC19CE4E27E78854EB4E96A6F78EC9CB0E6F3"
+}
+```
+
 ### 15 May 2018 by Oleg G.Kapranov
 
 [1]: https://en.bitcoin.it/wiki/Address
