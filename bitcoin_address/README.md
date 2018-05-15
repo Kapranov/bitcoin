@@ -53,12 +53,14 @@ defmodule BitcoinAddress do
       do: {Base.encode16(public_key), Base.encode16(private_key)}
   end
 end
+```
 
-BitcoinAddress.keypair
-#=> {
-#=>   "04BC2BB248E2EFCD36A4F88050137FB531476F937D36A3351425453F8CB12DDDC3DFBB623EA414C2C9788AB2329401C3FCE0725F57154B30AD85C862A72E8882F2",
-#=>   "2BA9695DE3EF229E23A5532C673C0A2AB2E213044572EE0AC6F0556499669D1A"
-#=> }
+```sh
+iex|1 ▶ BitcoinAddress.keypair
+{
+  "04BC2BB248E2EFCD36A4F88050137FB531476F937D36A3351425453F8CB12DDDC3DFBB623EA414C2C9788AB2329401C3FCE0725F57154B30AD85C862A72E8882F2",
+  "2BA9695DE3EF229E23A5532C673C0A2AB2E213044572EE0AC6F0556499669D1A"
+}
 ```
 
 You  don't  need  anything else to create an `ECDH`-compliant keys in a
@@ -94,12 +96,12 @@ end
 ```
 
 ```sh
-BitcoinAddress.keypair |> elem(1)
-BitcoinAddress.write
-#=> {
-#=>   ".keys/key",
-#=>   "8872CFBC3BFFEE5D190BB880C14D5528262982B4D57009061F12E3F60727DD92"
-#=> }
+iex|1 ▶ BitcoinAddress.keypair |> elem(1)
+iex|2 ▶ BitcoinAddress.write
+{
+  ".keys/key",
+  "8872CFBC3BFFEE5D190BB880C14D5528262982B4D57009061F12E3F60727DD92"
+}
 ```
 
 The create private function by keypair, and a Map to result:
@@ -134,6 +136,35 @@ iex|1 ▶ BitcoinAddress.write
   key:
 "049DD8AFF80EBEAB210DF5C6A11DC19CE4E27E78854EB4E96A6F78EC9CB0E6F3"
 }
+```
+
+## Signature
+
+Once you have your keypair generated and stored, you can use your
+*private key*  to sign a message you want to send.
+
+Keep in mind that **you have to decode both** *private key* **and**
+*public key* from `Base16` encoded string into binary strings firstly!
+
+```elixir
+signature = :crypto.sign(
+  :ecdsa,
+  :sha256,
+  "message",
+  [private_key, :secp256k1]
+)
+```
+With the generated *signature* we can verify if the owner of the *public
+key* actually signed the message without knowing their *private key*:
+
+```elixir
+:crypto.verify(
+  :ecdsa,
+  :sha256,
+  "message",
+  signature,
+  [public_key, :secp256k1]
+)
 ```
 
 ### 15 May 2018 by Oleg G.Kapranov
