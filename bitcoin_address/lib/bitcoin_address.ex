@@ -8,7 +8,7 @@ defmodule BitcoinAddress do
     public_key  = keys |> elem(0)
     private_key = keys |> elem(1)
     with file_path = @dir_keypair,
-      :ok <- File.write(file_path, "#{[public_key, private_key] |> Enum.join(",")}") do
+      :ok <- File.write(file_path, "#{[private_key, public_key] |> Enum.join(",")}") do
         %{"dir": file_path, "pri": private_key, "pub": public_key}
       else
         {:error, error} -> :file.format_error(error)
@@ -50,6 +50,15 @@ defmodule BitcoinAddress do
     [public_key, :secp256k1]
     )
     {:ok, varify}
+  end
+
+  def address do
+    #private_key
+    #|> KeyPair.to_public_key()
+    #|> hash_160()
+    #|> prepend_version_byte(network)
+    #|> Check.call()
+    #|> Encode.call()
   end
 
   defp keypair do

@@ -209,11 +209,11 @@ def verify do
   signature = sign() |> elem(1)
 
   varify = :crypto.verify(
-  :ecdsa,
-  :sha256,
-  "message",
-  signature,
-  [public_key, :secp256k1]
+   :ecdsa,
+   :sha256,
+   "message",
+   signature,
+   [public_key, :secp256k1]
   )
   {:ok, varify}
 end
@@ -224,7 +224,7 @@ iex|1 ▶ BitcoinAddress.verify
 {:ok, false}
 ```
 
-A Final of the result:
+A final of the result:
 
 ```elixir
 def write do
@@ -267,11 +267,11 @@ def verify do
   signature = sign() |> elem(1)
 
   varify = :crypto.verify(
-  :ecdsa,
-  :sha256,
-  "message",
-  signature,
-  [public_key, :secp256k1]
+    :ecdsa,
+    :sha256,
+    "message",
+    signature,
+    [public_key, :secp256k1]
   )
   {:ok, varify}
 end
@@ -339,6 +339,35 @@ private_key
 |> Encode.call()
 ```
 Let's divide it into smaller steps and implement each part of it.
+
+## Public Key
+
+Generating *public key* from *private key* is again very simple. It's
+based on elliptic curve manipulation (irreversible cryptographic
+algorithm). To get it, it's enough to do:
+
+```elixir
+{public_key, _} = :crypto.generate_key(:ecdh, :secp256k1, private_key)
+```
+
+```sh
+iex|1 ▶ private_key = File.read(".keys/key") |>
+...|1 ▶   Tuple.to_list |>
+...|1 ▶   List.delete(:ok) |>
+...|1 ▶   List.to_string |>
+...|1 ▶   String.split(",") |>
+...|1 ▶   List.first
+"8EB350AF13313B5DBC5BA3614A7B563F88B2A080E85DFE546B85FC2E4F5CB631"
+
+iex|2 ▶ {public_key, _} = :crypto.generate_key(:ecdh, :secp256k1, private_key)
+{<<4, 95, 171, 107, 10, 75, 231, 168, 7, 176, 75, 214, 241, 84, 97, 51, 157, 52,
+   104, 131, 252, 161, 181, 171, ...>>,
+ "8EB350AF13313B5DBC5BA3614A7B563F88B2A080E85DFE546B85FC2E4F5CB631"}
+```
+
+Now you have a *public key* derived from the private one.
+
+## Hashing
 
 ### 15 May 2018 by Oleg G.Kapranov
 
