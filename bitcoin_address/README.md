@@ -369,6 +369,48 @@ Now you have a *public key* derived from the private one.
 
 ## Hashing
 
+The next step is to apply a one-way function that produces a fingerprint
+of the given input. The specific algorithms used for that are:
+
+* Secure Hash Algorithm `sha256`
+* RACE Integrity Primitives Evaluation Message Digest `ripemd160`
+
+Starting with the public key, we compute `sha256` on it and then apply
+`ripemd160`  on  the  result, producing a `160-bit` number. The `hash`
+function is very simple: `:crypto.hash(algorithm, data)`
+
+## Network ID
+
+Blockchain-based currencies use encoded strings, which are `Base58Check`
+encoded. The encoding includes a prefix (traditionally a single *version
+byte*), which affects the leading symbol in the encoded result.
+
+These are two most common prefixes which are in use in the Bitcoin
+codebase:
+
+```elixir
+@version_bytes %{
+  main: <<0x00>>,
+  test: <<0x6F>>
+}
+```
+
+As you see, we use `0` for the main network and `111` for the test one.
+
+```elixir
+@version_bytes
+|> Map.get(network)
+|> Kernel.<>(public_hash)
+```
+
+To convert a public hash into `Base58Check` format, we need to firstly
+prepend  it  with a *version byte* which helps to identify the encoded
+data.
+
+## Base58 check
+
+
+
 ### 15 May 2018 by Oleg G.Kapranov
 
 [1]: https://en.bitcoin.it/wiki/Address
