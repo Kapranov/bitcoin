@@ -424,7 +424,6 @@ algorithm). To get it, it's enough to do:
 ```elixir
 {public_key, _} = :crypto.generate_key(:ecdh, :secp256k1, private_key)
 ```
-
 ```sh
 iex|1 ▶ private_key = File.read(".keys/key") |>
 ...|1 ▶   Tuple.to_list |>
@@ -432,12 +431,12 @@ iex|1 ▶ private_key = File.read(".keys/key") |>
 ...|1 ▶   List.to_string |>
 ...|1 ▶   String.split(",") |>
 ...|1 ▶   List.first
-"8EB350AF13313B5DBC5BA3614A7B563F88B2A080E85DFE546B85FC2E4F5CB631"
+"053A00A99FDF89DDAC42F33F59B2EE7321BCF8C3CECBA0E51D6FB9D500301B45"}
 
 iex|2 ▶ {public_key, _} = :crypto.generate_key(:ecdh, :secp256k1, private_key)
-{<<4, 95, 171, 107, 10, 75, 231, 168, 7, 176, 75, 214, 241, 84, 97, 51, 157, 52,
-   104, 131, 252, 161, 181, 171, ...>>,
- "8EB350AF13313B5DBC5BA3614A7B563F88B2A080E85DFE546B85FC2E4F5CB631"}
+{<<4, 223, 93, 86, 104, 6, 82, 243, 164, 17, 36, 42, 95, 215, 158, 17,
+   150, 3, 200, 199, 228, 33, 56, 194, ...>>,
+ "053A00A99FDF89DDAC42F33F59B2EE7321BCF8C3CECBA0E51D6FB9D500301B45"}
 ```
 Now you have a *public key* derived from the private one.
 
@@ -446,6 +445,12 @@ def to_public_key do
   {public_key, args} = :crypto.generate_key(:ecdh, :secp256k1, get_private_key())
   {public_key, args}
 end
+```
+```sh
+iex|1 ▶ BitcoinAddress.to_public_key
+{<<4, 223, 93, 86, 104, 6, 82, 243, 164, 17, 36, 42, 95, 215, 158, 17,
+   150, 3, 200, 199, 228, 33, 56, 194, ...>>,
+ "053A00A99FDF89DDAC42F33F59B2EE7321BCF8C3CECBA0E51D6FB9D500301B45"}
 ```
 ## Hashing
 
