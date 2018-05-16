@@ -4,17 +4,25 @@ defmodule BitcoinAddress do
   @dir_keypair ".keys/key"
 
   def write do
-    private_key = keypair() |> elem(1)
+    keys = keypair()
+    public_key  = keys |> elem(0)
+    private_key = keys |> elem(1)
     with file_path = @dir_keypair,
-      :ok <- File.write(file_path, private_key) do
-        %{"dir": file_path, "key": private_key}
+      :ok <- File.write(file_path, "#{[public_key, private_key] |> Enum.join(",")}") do
+        %{"dir": file_path, "pri": private_key, "pub": public_key}
       else
         {:error, error} -> :file.format_error(error)
       end
   end
 
   def sign do
-    private_key = File.read(@dir_keypair) |> elem(1)
+    private_key = File.read(".keys/key")
+                  |> Tuple.to_list
+                  |> List.delete(:ok)
+                  |> List.to_string
+                  |> String.split(",")
+                  |> List.first
+
     signature = :crypto.sign(
       :ecdsa,
       :sha256,
@@ -24,10 +32,30 @@ defmodule BitcoinAddress do
     {:ok, signature}
   end
 
+  def verify do
+    public_key = File.read(".keys/key")
+                 |> Tuple.to_list
+                 |> List.delete(:ok)
+                 |> List.to_string
+                 |> String.split(",")
+                 |> List.last
+
+    signature = sign() |> elem(1)
+
+    varify = :crypto.verify(
+    :ecdsa,
+    :sha256,
+    "message",
+    signature,
+    [public_key, :secp256k1]
+    )
+    {:ok, varify}
+  end
+
   defp keypair do
-    {_, private_key} =
+    {public_key, private_key} =
       with {public_key, private_key} <- :crypto.generate_key(:ecdh, :secp256k1),
         do: {Base.encode16(public_key), Base.encode16(private_key)}
-    {:ok, private_key}
+    {public_key, private_key}
   end
 end

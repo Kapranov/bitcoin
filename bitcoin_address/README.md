@@ -158,7 +158,13 @@ signature = :crypto.sign(
 
 ```elixir
 def sign do
-  private_key = File.read(@dir_keypair) |> elem(1)
+  private_key = File.read(".keys/key")
+                |> Tuple.to_list
+                |> List.delete(:ok)
+                |> List.to_string
+                |> String.split(",")
+                |> List.first
+
   signature = :crypto.sign(
     :ecdsa,
     :sha256,
@@ -177,7 +183,6 @@ iex|1 ▶ BitcoinAddress.sign
     63, 102, 59, 228, 200, 76, 8, ...>>
 }
 ```
-
 With  the  generated   *signature*  we  can  verify  if the owner of the
 *public key*   actually  signed   the   message  without  knowing  their
 *private key*:
@@ -190,6 +195,86 @@ With  the  generated   *signature*  we  can  verify  if the owner of the
   signature,
   [public_key, :secp256k1]
 )
+```
+
+```elixir
+def verify do
+  public_key = File.read(".keys/key")
+               |> Tuple.to_list
+               |> List.delete(:ok)
+               |> List.to_string
+               |> String.split(",")
+               |> List.last
+
+  signature = sign() |> elem(1)
+
+  varify = :crypto.verify(
+  :ecdsa,
+  :sha256,
+  "message",
+  signature,
+  [public_key, :secp256k1]
+  )
+  {:ok, varify}
+end
+```
+
+```sh
+iex|1 ▶ BitcoinAddress.verify
+{:ok, false}
+```
+
+A Final of the result:
+
+```elixir
+def write do
+  keys = keypair()
+  public_key  = keys |> elem(0)
+  private_key = keys |> elem(1)
+  with file_path = @dir_keypair,
+    :ok <- File.write(file_path, "#{[public_key, private_key] |> Enum.join(",")}") do
+      %{"dir": file_path, "pri": private_key, "pub": public_key}
+    else
+      {:error, error} -> :file.format_error(error)
+    end
+end
+
+def sign do
+  private_key = File.read(".keys/key")
+                |> Tuple.to_list
+                |> List.delete(:ok)
+                |> List.to_string
+                |> String.split(",")
+                |> List.first
+
+  signature = :crypto.sign(
+    :ecdsa,
+    :sha256,
+    "message",
+    [private_key, :secp256k1]
+  )
+  {:ok, signature}
+end
+
+def verify do
+  public_key = File.read(".keys/key")
+               |> Tuple.to_list
+               |> List.delete(:ok)
+               |> List.to_string
+               |> String.split(",")
+               |> List.last
+
+  signature = sign() |> elem(1)
+
+  varify = :crypto.verify(
+  :ecdsa,
+  :sha256,
+  "message",
+  signature,
+  [public_key, :secp256k1]
+  )
+  {:ok, varify}
+end
 ```
 
 ## Address
@@ -260,3 +345,4 @@ Let's divide it into smaller steps and implement each part of it.
 [1]: https://en.bitcoin.it/wiki/Address
 [2]: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
 [3]: https://blog.lelonek.me/how-to-calculate-bitcoin-address-in-elixir-68939af4f0e9
+[4]: https://github.com/ntrepid8/ex_crypto
