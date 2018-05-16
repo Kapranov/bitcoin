@@ -110,9 +110,11 @@ The create private function by keypair, and a Map to result:
 defmodule BitcoinAddress do
   @moduledoc false
 
+  @dir_keypair ".keys/key"
+
   def write do
     private_key = keypair() |> elem(1)
-    with file_path = ".keys/key",
+    with file_path = @dir_keypair,
       :ok <- File.write(file_path, private_key) do
         %{"dir": file_path, "key": private_key}
       else
@@ -153,6 +155,20 @@ signature = :crypto.sign(
   [private_key, :secp256k1]
 )
 ```
+
+```elixir
+def sign do
+  private_key = File.read(@dir_keypair) |> elem(1)
+  signature = :crypto.sign(
+    :ecdsa,
+    :sha256,
+    "message",
+    [private_key, :secp256k1]
+  )
+  {:ok, signature}
+end
+```
+
 With  the  generated   *signature*  we  can  verify  if the owner of the
 *public key*   actually  signed   the   message  without  knowing  their
 *private key*:
