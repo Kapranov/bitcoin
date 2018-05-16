@@ -169,6 +169,15 @@ def sign do
 end
 ```
 
+```sh
+iex|1 ▶ BitcoinAddress.sign
+{
+  :ok,
+  <<48, 69, 2, 32, 24, 144, 0, 84, 121, 77, 110, 189, 49, 82, 103, 21,
+    63, 102, 59, 228, 200, 76, 8, ...>>
+}
+```
+
 With  the  generated   *signature*  we  can  verify  if the owner of the
 *public key*   actually  signed   the   message  without  knowing  their
 *private key*:
