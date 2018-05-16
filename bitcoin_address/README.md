@@ -364,7 +364,6 @@ iex|2 ▶ {public_key, _} = :crypto.generate_key(:ecdh, :secp256k1, private_key)
    104, 131, 252, 161, 181, 171, ...>>,
  "8EB350AF13313B5DBC5BA3614A7B563F88B2A080E85DFE546B85FC2E4F5CB631"}
 ```
-
 Now you have a *public key* derived from the private one.
 
 ## Hashing

@@ -8,7 +8,7 @@ defmodule BitcoinAddress do
     public_key  = keys |> elem(0)
     private_key = keys |> elem(1)
     with file_path = @dir_keypair,
-      :ok <- File.write(file_path, "#{[private_key, public_key] |> Enum.join(",")}") do
+      :ok <- File.write(file_path, "#{[private_key, public_key] |> Enum.join(", ")}") do
         %{"dir": file_path, "pri": private_key, "pub": public_key}
       else
         {:error, error} -> :file.format_error(error)
@@ -16,13 +16,7 @@ defmodule BitcoinAddress do
   end
 
   def sign do
-    private_key = File.read(".keys/key")
-                  |> Tuple.to_list
-                  |> List.delete(:ok)
-                  |> List.to_string
-                  |> String.split(",")
-                  |> List.first
-
+    private_key = get_private_key()
     signature = :crypto.sign(
       :ecdsa,
       :sha256,
@@ -33,13 +27,7 @@ defmodule BitcoinAddress do
   end
 
   def verify do
-    public_key = File.read(".keys/key")
-                 |> Tuple.to_list
-                 |> List.delete(:ok)
-                 |> List.to_string
-                 |> String.split(",")
-                 |> List.last
-
+    public_key = get_public_key()
     signature = sign() |> elem(1)
 
     varify = :crypto.verify(
@@ -53,12 +41,17 @@ defmodule BitcoinAddress do
   end
 
   def address do
-    #private_key
-    #|> KeyPair.to_public_key()
-    #|> hash_160()
-    #|> prepend_version_byte(network)
-    #|> Check.call()
-    #|> Encode.call()
+    # private_key
+    # |> KeyPair.to_public_key()
+    # |> hash_160()
+    # |> prepend_version_byte(network)
+    # |> Check.call()
+    # |> Encode.call()
+  end
+
+  def to_public_key do
+    {public_key, args} = :crypto.generate_key(:ecdh, :secp256k1, get_private_key())
+    {public_key, args}
   end
 
   defp keypair do
@@ -66,5 +59,24 @@ defmodule BitcoinAddress do
       with {public_key, private_key} <- :crypto.generate_key(:ecdh, :secp256k1),
         do: {Base.encode16(public_key), Base.encode16(private_key)}
     {public_key, private_key}
+  end
+
+  defp get_private_key do
+    File.read(".keys/key")
+    |> Tuple.to_list
+    |> List.delete(:ok)
+    |> List.to_string
+    |> String.split(",")
+    |> List.first
+  end
+
+  defp get_public_key do
+    File.read(".keys/key")
+    |> Tuple.to_list
+    |> List.delete(:ok)
+    |> List.to_string
+    |> String.split(",")
+    |> List.last
+    |> String.trim
   end
 end
