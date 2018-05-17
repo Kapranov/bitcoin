@@ -54,8 +54,6 @@ defmodule BitcoinAddress do
     {public_key, args}
   end
 
-  def hash(data, algorithm), do: :crypto.hash(algorithm, data)
-
   defp keypair do
     {public_key, private_key} =
       with {public_key, private_key} <- :crypto.generate_key(:ecdh, :secp256k1),
@@ -81,4 +79,6 @@ defmodule BitcoinAddress do
     |> List.last
     |> String.trim
   end
+
+  defp hash(data, algorithm), do: :crypto.hash(algorithm, data)
 end
