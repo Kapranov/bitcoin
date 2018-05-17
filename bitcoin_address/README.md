@@ -620,6 +620,116 @@ The result is the `25-byte` *Binary Bitcoin Address*.
 
 ## Base58 encoding
 
+Most Bitcoin addresses are `34` characters. It's because `Base58` format
+consist of random digits and uppercase  and  lowercase letters, with the
+exception that the uppercase letter `O`, uppercase letter `I`, lowercase
+letter  `1`,  and  the  number  `0`  are  never  used  to prevent visual
+ambiguity. Another advantage is lack of line-breaks, either  in  emails-
+chats or while double-clicking and copying, as there's no punctuation to
+break at.
+
+To encode a big-endian series of bytes from the previous step, we'll use
+a regular mathematical  bignumber division with the *alphabet* described
+above.
+
+At  the  very  beginning, we need to define a recursive function and, in
+case of passing a binary, convert it to a number.
+
+Once  converted,  we  pass  our binary-come-number into a recursive call
+along with the beginning of our `input`, and an empty string.
+
+We continue recursing until we reduce our `input` down to `0`.  In  that
+case, we'll return the `acc` we've built up.
+
+```elixir
+def call(input, acc \\ "")
+def call(0, acc), do: acc
+def call(input, acc)
+    when is_binary(input) do
+  input
+  |> :binary.decode_unsigned()
+  |> call(acc)
+  |> prepend_zeros(input)
+end
+```
+For each recursive call to `call/2`,  we divide our `input` by `58`  and
+find  the  reminder.  We  use  that  remainder  to take a character from
+`alphabet`, and append the current `acc` to it.
+
+```elixir
+def call(input, acc) do
+  input
+  |> div(58)
+  |> call(extended_hash(input, acc))
+end
+
+defp extended_hash(input, acc) do
+  "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+  |> String.at(rem(input, 58))
+  |> apend(acc)
+end
+```
+If  we  encode  binaries with leading zero bytes, we need to count them,
+encode them manually, and prepend them to the final `acc`.
+
+```elixir
+defp prepend_zeros(acc, input) do
+  input
+  |> encode_zeros()
+  |> apend(acc)
+end
+
+defp encode_zeros(input) do
+  input
+  |> leading_zeros()
+  |> duplicate_zeros()
+end
+```
+We  use `:binary.bin_to_list` from `erlang` to convert our binary into a
+list of bytes, and  `Enum.find_index` to find the first byte in our list
+that isn't zero. This index value is equivalent to the number of leading
+zero bytes in our binary.
+
+```elixir
+defp leading_zeros(input) do
+  input
+  |> :binary.bin_to_list()
+  |> Enum.find_index(&(&1 != 0))
+end
+```
+Next,  we'll write a function to manually encode these leading zeros. We
+simply grab  the character  in  our  *alphabet* that maps to a zero byte
+(`1` - the first one), and duplicate it as many times as we need.
+
+```elixir
+defp duplicate_zeros(count) do
+  "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+  |> String.first()
+  |> String.duplicate(count)
+end
+```
+Now we should be able to encode binaries with leading zero bytes and see
+their resulting `1` values in our final hash.
+
+## Summary
+
+A common misconception  is  that *walletes*   contain  Bitcoins. Now you
+know,  they  contain  only  keys.  The  balances  are  recorded  in  the
+Blockchain  and  can be tracked by *addresses* .  In a sense, a *wallet*
+is really a keychain.
+
+In this manual you learned  how to generate a Bitcoin Address using your
+*private key*  or  even  any *public key*.  You also got to know how the
+entire  algorithm works and  what  cryptographic functions are required.
+
+You already know that an *address* consists  of  a string of letters and
+numbers,  which is in fact an encoded *base58check* version of a *public
+key* `160-bit` hash.  Just like you would ask others to send an email to
+your  email  address, you  can ask them to send Bitcoins to your Bitcoin
+Address.
+
+The entire repository with the code and tests is available here:
+
 ### 15 May 2018 by Oleg G.Kapranov
 
 [1]:  https://en.bitcoin.it/wiki/Address
@@ -631,6 +741,6 @@ The result is the `25-byte` *Binary Bitcoin Address*.
 [7]:  http://www.petecorey.com/blog/tags#bitcoin
 [8]:  http://www.petecorey.com/blog/tags#elixir
 [9]:  https://github.com/pcorey/hello_bitcoin_node
-[10]:  https://github.com/pcorey/hello_blockchain
+[10]: https://github.com/pcorey/hello_blockchain
 [11]: https://github.com/pcorey/hello_bitcoin
 [12]: https://github.com/pcorey/bitcoin_network
