@@ -3,6 +3,11 @@ defmodule BitcoinAddress do
 
   @dir_keypair ".keys/key"
 
+  @version_bytes %{
+    main: <<0x00>>,
+    test: <<0x6F>>
+  }
+
   def write do
     keys = keypair()
     public_key  = keys |> elem(0)
@@ -52,6 +57,23 @@ defmodule BitcoinAddress do
   def to_public_key do
     {public_key, args} = :crypto.generate_key(:ecdh, :secp256k1, get_private_key())
     {public_key, args}
+  end
+
+  def to_public_hash do
+    public_key = to_public_key() |> elem(0)
+
+    public_key
+    |> hash(:sha256)
+    |> hash(:ripemd160)
+  end
+
+  def prepend_version do
+    public_hash = to_public_hash()
+    network = :main
+
+    @version_bytes
+    |> Map.get(network)
+    |> Kernel.<>(public_hash)
   end
 
   defp keypair do

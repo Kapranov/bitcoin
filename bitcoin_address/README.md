@@ -446,6 +446,7 @@ def to_public_key do
   {public_key, args}
 end
 ```
+
 ```sh
 iex|1 ▶ BitcoinAddress.to_public_key
 {<<4, 223, 93, 86, 104, 6, 82, 243, 164, 17, 36, 42, 95, 215, 158, 17,
@@ -478,6 +479,41 @@ iex|2 ▶ public_key |>
 <<22, 41, 219, 113, 107, 58, 170, 41, 136, 50, 26, 115, 88, 68, 113, 61,
   159, 122, 45, 154>>
 ```
+An examples with Hashes:
+
+```elixir
+public_key = BitcoinAddress.to_public_key |> elem(0)
+
+# To get the binary hash:
+:crypto.hash(:sha, public_key)
+
+# to get the hex digest from that:
+:crypto.hash(:sha256, public_key) |> Base.encode16
+
+# hashing multiple things in a list
+:crypto.hash(:sha256, [3, "things", "!"]) |> Base.encode16
+
+iex(1)> :crypto.hash(:sha, "whatever")
+iex(1)> :crypto.hash(:sha256, "whatever") |> Base.encode16
+iex(1)> :crypto.hash(:sha256, [3, "things", "!"]) |> Base.encode16
+
+# Streaming hashing
+sha = :crypto.hash_init(:sha256)
+sha = :crypto.hash_update(sha, "2")
+sha = :crypto.hash_update(sha, "things")
+sha_binary = :crypto.hash_final(sha)
+sha_hex = sha_binary |> Base.encode16 |> String.downcase
+```
+
+```elixir
+  def to_public_hash do
+    public_key = to_public_key() |> elem(0)
+
+    public_key
+    |> hash(:sha256)
+    |> hash(:ripemd160)
+  end
+```
 
 ## Network ID
 
@@ -494,7 +530,6 @@ codebase:
   test: <<0x6F>>
 }
 ```
-
 As you see, we use `0` for the main network and `111` for the test one.
 
 ```elixir
@@ -507,6 +542,17 @@ To convert a public hash into `Base58Check` format, we need to firstly
 prepend  it  with a *version byte* which helps to identify the encoded
 data.
 
+```elixir
+def prepend_version do
+  public_hash = to_public_hash()
+  network = :main
+
+  @version_bytes
+  |> Map.get(network)
+  |> Kernel.<>(public_hash)
+end
+```
+
 ## Base58 check
 
 
@@ -516,11 +562,12 @@ data.
 [1]:  https://en.bitcoin.it/wiki/Address
 [2]:  https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
 [3]:  https://blog.lelonek.me/how-to-calculate-bitcoin-address-in-elixir-68939af4f0e9
-[4]:  https://github.com/ntrepid8/ex_crypto
-[5]:  https://www.djm.org.uk/posts/cryptographic-hash-functions-elixir-generating-hex-digests-md5-sha1-sha2/
-[6]:  http://www.petecorey.com/blog/tags#bitcoin
-[7]:  http://www.petecorey.com/blog/tags#elixir
-[8]:  https://github.com/pcorey/hello_bitcoin_node
-[9]:  https://github.com/pcorey/hello_blockchain
-[10]: https://github.com/pcorey/hello_bitcoin
-[11]: https://github.com/pcorey/bitcoin_network
+[4]:  https://github.com/KamilLelonek/ex_wallet
+[5]:  https://github.com/ntrepid8/ex_crypto
+[6]:  https://www.djm.org.uk/posts/cryptographic-hash-functions-elixir-generating-hex-digests-md5-sha1-sha2/
+[7]:  http://www.petecorey.com/blog/tags#bitcoin
+[8]:  http://www.petecorey.com/blog/tags#elixir
+[9]:  https://github.com/pcorey/hello_bitcoin_node
+[10]:  https://github.com/pcorey/hello_blockchain
+[11]: https://github.com/pcorey/hello_bitcoin
+[12]: https://github.com/pcorey/bitcoin_network
