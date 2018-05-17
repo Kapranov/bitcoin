@@ -464,6 +464,21 @@ Starting with the public key, we compute `sha256` on it and then apply
 `ripemd160`  on  the  result, producing a `160-bit` number. The `hash`
 function is very simple: `:crypto.hash(algorithm, data)`
 
+```elixir
+def hash(data, algorithm), do: :crypto.hash(algorithm, data)
+```
+
+```sh
+iex|1 ▶ public_key = BitcoinAddress.to_public_key |> elem(0)
+<<4, 223, 93, 86, 104, 6, 82, 243, 164, 17, 36, 42, 95, 215, 158, 17,
+  150, 3, 200, 199, 228, 33, 56, 194, 66, ...>>
+iex|2 ▶ public_key |>
+        BitcoinAddress.hash(:sha256) |>
+        BitcoinAddress.hash(:ripemd160)
+<<22, 41, 219, 113, 107, 58, 170, 41, 136, 50, 26, 115, 88, 68, 113, 61,
+  159, 122, 45, 154>>
+```
+
 ## Network ID
 
 Blockchain-based currencies use encoded strings, which are `Base58Check`
@@ -498,7 +513,14 @@ data.
 
 ### 15 May 2018 by Oleg G.Kapranov
 
-[1]: https://en.bitcoin.it/wiki/Address
-[2]: https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-[3]: https://blog.lelonek.me/how-to-calculate-bitcoin-address-in-elixir-68939af4f0e9
-[4]: https://github.com/ntrepid8/ex_crypto
+[1]:  https://en.bitcoin.it/wiki/Address
+[2]:  https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
+[3]:  https://blog.lelonek.me/how-to-calculate-bitcoin-address-in-elixir-68939af4f0e9
+[4]:  https://github.com/ntrepid8/ex_crypto
+[5]:  https://www.djm.org.uk/posts/cryptographic-hash-functions-elixir-generating-hex-digests-md5-sha1-sha2/
+[6]:  http://www.petecorey.com/blog/tags#bitcoin
+[7]:  http://www.petecorey.com/blog/tags#elixir
+[8]:  https://github.com/pcorey/hello_bitcoin_node
+[9]:  https://github.com/pcorey/hello_blockchain
+[10]: https://github.com/pcorey/hello_bitcoin
+[11]: https://github.com/pcorey/bitcoin_network
