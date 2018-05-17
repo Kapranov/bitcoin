@@ -555,7 +555,70 @@ end
 
 ## Base58 check
 
+`Base58` number system uses `58` characters and a checksum to help human
+readability,  avoid  ambiguity  and  protect against errors. It has also
+benefits  in  terms  of  brevity  as  long  numbers are represented more
+compact in mixed-alphanumeric systems with a base higher than `10`.
 
+Here is the general flow of performing `Base58Check` check:
+
+```sh
+                  BASE58CHECK ENCODING
+              ╔═══════════════════════════╗
+              ║           PAYLOAD         ║
+              ╚═══════════════════════════╝
+1. Add Version prefix                                  2.  Hash  Version
+                                                       Prefix + Playload
+╔═════════════╦═══════════════════════════╗            ╔═══════════════╗
+║   VERSION   ║           PAYLOAD         ╠═──────────>║     SHA256    ║
+╚═════════════╩═══════════════════════════╝            ╠═══════════════╣
+                                                       ║     SHA256    ║
+                                                       ╠═══════════════╣
+                                                       ║ first 4 bytes ║
+                                                       ╚════════╦══════╝
+╔═════════════╦═══════════════════════════╦══════════╗          ║
+║   VERSION   ║           PAYLOAD         ║ CHECKSUM ╟<═════════╝
+╚═════════════╩══════════════╦════════════╩══════════╝
+                             ║                         3.  Add  first  4
+                             ║                         bytes as checksum
+              ╔══════════════╩════════════╗
+              ║        BASE 58 ENCODE     ║
+              ╚══════════════╦════════════╝
+4. Encode in Base 58         ║
+╔════════════════════════════╩═══════════════════════╗
+║              BASE58CHECK ENCODED PAYLOAD           ║
+╚════════════════════════════════════════════════════╝
+```
+Which can be represented programatically as:
+
+```elixir
+versioned_hash
+|> sha256()
+|> sha256()
+|> checksum()
+|> append(versioned_hash)
+```
+So, to perform `Base58Check` we should cover the following steps:
+
+1. Perform double `SHA-256` hash on the versioned payload.
+
+```elixir
+:crypto.hash(:sha256, data)
+```
+
+2. Take the first `4` bytes of the second `SHA-256` hash as a checksum.
+
+```elixir
+<<checksum::bytes-size(4), _::bits>> = hash
+```
+3. Append checksum to the initial public hash.
+
+```elixir
+versioned_hash <> checksum
+```
+The result is the `25-byte` *Binary Bitcoin Address*.
+
+## Base58 encoding
 
 ### 15 May 2018 by Oleg G.Kapranov
 
