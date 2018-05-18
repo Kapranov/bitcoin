@@ -618,6 +618,33 @@ versioned_hash <> checksum
 ```
 The result is the `25-byte` *Binary Bitcoin Address*.
 
+```elixir
+@checksum_length 4
+
+def check do
+  versioned_hash = prepend_version()
+
+  versioned_hash
+  |> sha256()
+  |> sha256()
+  |> checksum()
+  |> append(versioned_hash)
+end
+
+defp prepend_version do
+  public_hash = to_public_hash()
+  network = :main
+
+  @version_bytes
+  |> Map.get(network)
+  |> Kernel.<>(public_hash)
+end
+
+defp sha256(data), do: :crypto.hash(:sha256, data)
+defp checksum(<<checksum::bytes-size(@checksum_length), _::bits>>), do: checksum
+defp append(checksum, hash), do: hash <> checksum
+```
+
 ## Base58 encoding
 
 Most Bitcoin addresses are `34` characters. It's because `Base58` format

@@ -2,7 +2,7 @@ defmodule BitcoinAddress do
   @moduledoc false
 
   @dir_keypair ".keys/key"
-
+  @checksum_length 4
   @version_bytes %{
     main: <<0x00>>,
     test: <<0x6F>>
@@ -54,26 +54,14 @@ defmodule BitcoinAddress do
     # |> Encode.call()
   end
 
-  def to_public_key do
-    {public_key, args} = :crypto.generate_key(:ecdh, :secp256k1, get_private_key())
-    {public_key, args}
-  end
+  def check do
+    versioned_hash = prepend_version()
 
-  def to_public_hash do
-    public_key = to_public_key() |> elem(0)
-
-    public_key
-    |> hash(:sha256)
-    |> hash(:ripemd160)
-  end
-
-  def prepend_version do
-    public_hash = to_public_hash()
-    network = :main
-
-    @version_bytes
-    |> Map.get(network)
-    |> Kernel.<>(public_hash)
+    versioned_hash
+    |> sha256()
+    |> sha256()
+    |> checksum()
+    |> append(versioned_hash)
   end
 
   defp keypair do
@@ -102,5 +90,30 @@ defmodule BitcoinAddress do
     |> String.trim
   end
 
+  defp prepend_version do
+    public_hash = to_public_hash()
+    network = :main
+
+    @version_bytes
+    |> Map.get(network)
+    |> Kernel.<>(public_hash)
+  end
+
+  defp to_public_key do
+    {public_key, args} = :crypto.generate_key(:ecdh, :secp256k1, get_private_key())
+    {public_key, args}
+  end
+
+  defp to_public_hash do
+    public_key = to_public_key() |> elem(0)
+
+    public_key
+    |> hash(:sha256)
+    |> hash(:ripemd160)
+  end
+
   defp hash(data, algorithm), do: :crypto.hash(algorithm, data)
+  defp sha256(data), do: :crypto.hash(:sha256, data)
+  defp checksum(<<checksum::bytes-size(@checksum_length), _::bits>>), do: checksum
+  defp append(checksum, hash), do: hash <> checksum
 end
