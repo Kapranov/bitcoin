@@ -3,6 +3,8 @@ defmodule BitcoinAddress do
 
   @dir_keypair ".keys/key"
   @checksum_length 4
+  @alphabet "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+  @length String.length(@alphabet)
   @version_bytes %{
     main: <<0x00>>,
     test: <<0x6F>>
@@ -64,6 +66,22 @@ defmodule BitcoinAddress do
     |> append(versioned_hash)
   end
 
+  def call(input, acc \\ "")
+  def call(0, acc), do: acc
+
+  def call(input, acc) when is_binary(input) do
+    input
+    |> :binary.decode_unsigned()
+    |> call(acc)
+    |> prepend_zeros(input)
+  end
+
+  def call(input, acc) do
+    input
+    |> div(@length)
+    |> call(extended_hash(input, acc))
+  end
+
   defp keypair do
     {public_key, private_key} =
       with {public_key, private_key} <- :crypto.generate_key(:ecdh, :secp256k1),
@@ -112,8 +130,38 @@ defmodule BitcoinAddress do
     |> hash(:ripemd160)
   end
 
+  defp extended_hash(input, acc) do
+    @alphabet
+    |> String.at(rem(input, @length))
+    |> append(acc)
+  end
+
+  defp prepend_zeros(acc, input) do
+    input
+    |> encode_zeros()
+    |> append(acc)
+  end
+
+  defp encode_zeros(input) do
+    input
+    |> leading_zeros()
+    |> duplicate_zeros()
+  end
+
+  defp leading_zeros(input) do
+    input
+    |> :binary.bin_to_list()
+    |> Enum.find_index(&(&1 != 0))
+  end
+
+  defp duplicate_zeros(count) do
+    @alphabet
+    |> String.first()
+    |> String.duplicate(count)
+  end
+
   defp hash(data, algorithm), do: :crypto.hash(algorithm, data)
   defp sha256(data), do: :crypto.hash(:sha256, data)
   defp checksum(<<checksum::bytes-size(@checksum_length), _::bits>>), do: checksum
-  defp append(checksum, hash), do: hash <> checksum
+  defp append(prefix, postfix), do: prefix <> postfix
 end
