@@ -761,6 +761,59 @@ end
 Now we should be able to encode binaries with leading zero bytes and see
 their resulting `1` values in our final hash.
 
+```elixir
+@alphabet "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+@length String.length(@alphabet)
+
+def call(input, acc \\ "")
+def call(0, acc), do: acc
+
+def call(input, acc) when is_binary(input) do
+  input
+  |> :binary.decode_unsigned()
+  |> call(acc)
+  |> prepend_zeros(input)
+end
+
+def call(input, acc) do
+  input
+  |> div(@length)
+  |> call(extended_hash(input, acc))
+end
+
+defp extended_hash(input, acc) do
+  @alphabet
+  |> String.at(rem(input, @length))
+  |> append(acc)
+end
+
+defp prepend_zeros(acc, input) do
+  input
+  |> encode_zeros()
+  |> append(acc)
+end
+
+defp encode_zeros(input) do
+  input
+  |> leading_zeros()
+  |> duplicate_zeros()
+end
+
+defp leading_zeros(input) do
+  input
+  |> :binary.bin_to_list()
+  |> Enum.find_index(&(&1 != 0))
+end
+
+defp duplicate_zeros(count) do
+  @alphabet
+  |> String.first()
+  |> String.duplicate(count)
+end
+
+defp append(prefix, postfix), do: prefix <> postfix
+```
+
 ## Summary
 
 A common misconception  is  that *walletes*   contain  Bitcoins. Now you
