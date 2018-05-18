@@ -631,6 +631,15 @@ def check do
   |> append(versioned_hash)
 end
 
+defp get_private_key do
+  File.read(".keys/key")
+  |> Tuple.to_list
+  |> List.delete(:ok)
+  |> List.to_string
+  |> String.split(",")
+  |> List.first
+end
+
 defp prepend_version do
   public_hash = to_public_hash()
   network = :main
@@ -640,6 +649,20 @@ defp prepend_version do
   |> Kernel.<>(public_hash)
 end
 
+defp to_public_key do
+  {public_key, args} = :crypto.generate_key(:ecdh, :secp256k1, get_private_key())
+  {public_key, args}
+end
+
+defp to_public_hash do
+  public_key = to_public_key() |> elem(0)
+
+  public_key
+  |> hash(:sha256)
+  |> hash(:ripemd160)
+end
+
+defp hash(data, algorithm), do: :crypto.hash(algorithm, data)
 defp sha256(data), do: :crypto.hash(:sha256, data)
 defp checksum(<<checksum::bytes-size(@checksum_length), _::bits>>), do: checksum
 defp append(checksum, hash), do: hash <> checksum
