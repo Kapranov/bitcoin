@@ -883,12 +883,12 @@ defmodule BitcoinAddress do
   end
 
   def address do
-    # private_key
-    # |> KeyPair.to_public_key()
-    # |> hash_160()
-    # |> prepend_version_byte(network)
-    # |> Check.call()
-    # |> Encode.call()
+    private_key
+    |> KeyPair.to_public_key()
+    |> hash_160()
+    |> prepend_version_byte(network)
+    |> Check.call()
+    |> Encode.call()
   end
 
   def check do
