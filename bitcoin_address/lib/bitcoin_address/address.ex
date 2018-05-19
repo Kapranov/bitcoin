@@ -11,15 +11,13 @@ defmodule BitcoinAddress.Address do
   }
 
   def create do
-    keys = Pair.create
-    public_key  = keys |> elem(0)
-    private_key = keys |> elem(1)
-    with file_path = @dir_keypair,
-      :ok <- File.write(file_path, "#{[private_key, public_key] |> Enum.join(", ")}") do
-        %{"dir": file_path, "pri": private_key, "pub": public_key}
-      else
-        {:error, error} -> :file.format_error(error)
-      end
+    key = Pair.create
+    private_key = key |> elem(0)
+    with file_path = @dir_keypair, :ok <- File.write(file_path, private_key) do
+      %{"dir": file_path, "key": private_key}
+    else
+      {:error, error} -> :file.format_error(error)
+    end
   end
 
   def calculate(network \\ :main) do
@@ -40,13 +38,6 @@ defmodule BitcoinAddress.Address do
     |> String.split(",")
     |> List.first
   end
-
-  #defp keypair do
-  #  {public_key, private_key} =
-  #    with {public_key, private_key} <- :crypto.generate_key(:ecdh, :secp256k1),
-  #      do: {Base.encode16(public_key), Base.encode16(private_key)}
-  #  {public_key, private_key}
-  #end
 
   defp hash_160(public_key) do
     public_key
