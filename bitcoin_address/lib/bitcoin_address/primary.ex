@@ -1,46 +1,77 @@
 defmodule BitcoinAddress.Primary do
   @moduledoc false
 
-  @directory_path ".keys"
-  @file_name "key"
+  @dir_keypair ".keys/key"
+  @checksum_length 4
+  @alphabet "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+  @length String.length(@alphabet)
+  @version_bytes %{
+    main: <<0x00>>,
+    test: <<0x6F>>
+  }
 
-  ###############################
-  # CRUD DIRECTORY AND KEY FILE #
-  ###############################
-
-  def create(private_key \\ get_private_key(), public_key \\ get_public_key(),
-      directory \\ @directory_path, file \\ @file_name) do
-        with file_path = Path.join(directory, file),
-            :ok <- maybe_create_directory(directory),
-            :ok <- File.write(file_path, private_key),
-            :ok <- File.write("#{file_path}.pub", public_key) do
-          file_path
-        else
-          {:error, error} -> translate(error)
-        end
+  def write do
+    keys = keypair()
+    public_key  = keys |> elem(0)
+    private_key = keys |> elem(1)
+    with file_path = @dir_keypair,
+      :ok <- File.write(file_path, "#{[private_key, public_key] |> Enum.join(", ")}") do
+        %{"dir": file_path, "pri": private_key, "pub": public_key}
+      else
+        {:error, error} -> :file.format_error(error)
+      end
   end
 
-  def read(directory \\ @directory_path, file \\ @file_name) do
-    with file_path = Path.join(directory, file),
-        {:ok, private_key} <- File.read(file_path),
-        {:ok, public_key} <- File.read("#{file_path}.pub") do
-      %{"pri": private_key, "pub": public_key}
-    else
-      {:error, error} -> translate(error)
-    end
+  def sign do
+    private_key = get_private_key()
+    signature = :crypto.sign(
+      :ecdsa,
+      :sha256,
+      "message",
+      [private_key, :secp256k1]
+    )
+    {:ok, signature}
   end
 
-  def destroy(directory \\ @directory_path) do
-    with {:ok, files} <- File.rm_rf(directory) do
-      %{"deleted": files}
-    else
-      {:error, reason, _file} -> translate(reason)
-    end
+  def verify do
+    public_key = get_public_key()
+    signature = sign() |> elem(1)
+
+    varify = :crypto.verify(
+    :ecdsa,
+    :sha256,
+    "message",
+    signature,
+    [public_key, :secp256k1]
+    )
+    {:ok, varify}
   end
 
-  ###############################
-  # Generate Private Public Key #
-  ###############################
+  def check do
+    versioned_hash = prepend_version()
+
+    versioned_hash
+    |> sha256()
+    |> sha256()
+    |> checksum()
+    |> append(versioned_hash)
+  end
+
+  def call(input, acc \\ "")
+  def call(0, acc), do: acc
+
+  def call(input, acc) when is_binary(input) do
+    input
+    |> :binary.decode_unsigned()
+    |> call(acc)
+    |> prepend_zeros(input)
+  end
+
+  def call(input, acc) do
+    input
+    |> div(@length)
+    |> call(extended_hash(input, acc))
+  end
 
   defp keypair do
     {public_key, private_key} =
@@ -49,8 +80,79 @@ defmodule BitcoinAddress.Primary do
     {public_key, private_key}
   end
 
-  defp get_public_key,  do: keypair() |> elem(0)
-  defp get_private_key, do: keypair() |> elem(1)
-  defp maybe_create_directory(directory), do: File.mkdir_p(directory)
-  defp translate(error), do: :file.format_error(error)
+  defp get_private_key do
+    File.read(".keys/key")
+    |> Tuple.to_list
+    |> List.delete(:ok)
+    |> List.to_string
+    |> String.split(",")
+    |> List.first
+  end
+
+  defp get_public_key do
+    File.read(".keys/key")
+    |> Tuple.to_list
+    |> List.delete(:ok)
+    |> List.to_string
+    |> String.split(",")
+    |> List.last
+    |> String.trim
+  end
+
+  defp prepend_version do
+    public_hash = to_public_hash()
+    network = :main
+
+    @version_bytes
+    |> Map.get(network)
+    |> Kernel.<>(public_hash)
+  end
+
+  defp to_public_key do
+    {public_key, args} = :crypto.generate_key(:ecdh, :secp256k1, get_private_key())
+    {public_key, args}
+  end
+
+  defp to_public_hash do
+    public_key = to_public_key() |> elem(0)
+
+    public_key
+    |> hash(:sha256)
+    |> hash(:ripemd160)
+  end
+
+  defp extended_hash(input, acc) do
+    @alphabet
+    |> String.at(rem(input, @length))
+    |> append(acc)
+  end
+
+  defp prepend_zeros(acc, input) do
+    input
+    |> encode_zeros()
+    |> append(acc)
+  end
+
+  defp encode_zeros(input) do
+    input
+    |> leading_zeros()
+    |> duplicate_zeros()
+  end
+
+  defp leading_zeros(input) do
+    input
+    |> :binary.bin_to_list()
+    |> Enum.find_index(&(&1 != 0))
+  end
+
+  defp duplicate_zeros(count) do
+    @alphabet
+    |> String.first()
+    |> String.duplicate(count)
+  end
+
+  defp hash(data, algorithm), do: :crypto.hash(algorithm, data)
+  defp sha256(data), do: :crypto.hash(:sha256, data)
+  defp checksum(<<checksum::bytes-size(@checksum_length), _::bits>>), do: checksum
+  defp append(prefix, postfix), do: prefix <> postfix
 end
