@@ -164,6 +164,8 @@ def sign do
                 |> List.to_string
                 |> String.split(",")
                 |> List.first
+                |> Base.decode16
+                |> elem(1)
 
   signature = :crypto.sign(
     :ecdsa,
@@ -205,6 +207,8 @@ def verify do
                |> List.to_string
                |> String.split(",")
                |> List.last
+               |> Base.decode16
+               |> elem(1)
 
   signature = sign() |> elem(1)
 
@@ -221,7 +225,7 @@ end
 
 ```sh
 iex|1 ▶ BitcoinAddress.Primary.verify
-{:ok, false}
+{:ok, true}
 ```
 
 A final of the result:
@@ -246,6 +250,8 @@ def sign do
                 |> List.to_string
                 |> String.split(",")
                 |> List.first
+                |> Base.decode16
+                |> elem(1)
 
   signature = :crypto.sign(
     :ecdsa,
@@ -263,6 +269,8 @@ def verify do
                |> List.to_string
                |> String.split(",")
                |> List.last
+               |> Base.decode16
+               |> elem(1)
 
   signature = sign() |> elem(1)
 
@@ -359,7 +367,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   def sign do
-    private_key = get_private_key()
+    private_key = get_private_key() |> base.decode16 |> elem(1)
     signature = :crypto.sign(
       :ecdsa,
       :sha256,
@@ -370,7 +378,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   def verify do
-    public_key = get_public_key()
+    public_key = get_public_key() |> base.decode16 |> elem(1)
     signature = sign() |> elem(1)
 
     varify = :crypto.verify(
@@ -859,7 +867,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   def sign do
-    private_key = get_private_key()
+    private_key = get_private_key() |> base.decode16 |> elem(1)
     signature = :crypto.sign(
       :ecdsa,
       :sha256,
@@ -870,7 +878,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   def verify do
-    public_key = get_public_key()
+    public_key = get_public_key() |> base.decode16 |> elem(1)
     signature = sign() |> elem(1)
 
     varify = :crypto.verify(

@@ -1,7 +1,7 @@
 defmodule BitcoinAddress.Primary do
   @moduledoc false
 
-  @dir_keypair ".keys/key"
+  @dir_keypair ".keys/keys"
   @checksum_length 4
   @alphabet "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
   @length String.length(@alphabet)
@@ -23,7 +23,8 @@ defmodule BitcoinAddress.Primary do
   end
 
   def sign do
-    private_key = get_private_key()
+    private_key = get_private_key() |> Base.decode16 |> elem(1)
+
     signature = :crypto.sign(
       :ecdsa,
       :sha256,
@@ -34,7 +35,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   def verify do
-    public_key = get_public_key()
+    public_key = get_public_key() |> Base.decode16 |> elem(1)
     signature = sign() |> elem(1)
 
     varify = :crypto.verify(
