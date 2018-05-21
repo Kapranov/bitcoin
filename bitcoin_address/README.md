@@ -514,13 +514,13 @@ sha_hex = sha_binary |> Base.encode16 |> String.downcase
 ```
 
 ```elixir
-  def to_public_hash do
-    public_key = to_public_key() |> elem(0)
+def to_public_hash do
+  public_key = to_public_key() |> elem(0)
 
-    public_key
-    |> hash(:sha256)
-    |> hash(:ripemd160)
-  end
+  public_key
+  |> hash(:sha256)
+  |> hash(:ripemd160)
+end
 ```
 
 ## Network ID
@@ -873,7 +873,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   def sign do
-    private_key = get_private_key() |> base.decode16 |> elem(1)
+    private_key = get_private_key() |> Base.decode16 |> elem(1)
     signature = :crypto.sign(
       :ecdsa,
       :sha256,
@@ -884,7 +884,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   def verify do
-    public_key = get_public_key() |> base.decode16 |> elem(1)
+    public_key = get_public_key() |> Base.decode16 |> elem(1)
     signature = sign() |> elem(1)
 
     varify = :crypto.verify(
