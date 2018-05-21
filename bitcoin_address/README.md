@@ -45,7 +45,7 @@ Generating a keypair is as simple as calling a specific function with
 appropriate attributes:
 
 ```elixir
-defmodule BitcoinAddress do
+defmodule BitcoinAddress.Primary do
   @moduledoc false
 
   def keypair do
@@ -56,7 +56,7 @@ end
 ```
 
 ```sh
-iex|1 ▶ BitcoinAddress.keypair
+iex|1 ▶ BitcoinAddress.Primary.keypair
 {
   "04BC2BB248E2EFCD36A4F88050137FB531476F937D36A3351425453F8CB12DDDC3DFBB623EA414C2C9788AB2329401C3FCE0725F57154B30AD85C862A72E8882F2",
   "2BA9695DE3EF229E23A5532C673C0A2AB2E213044572EE0AC6F0556499669D1A"
@@ -73,7 +73,7 @@ doesn't  require  any connection  to  the network or a reference to the
 Blockchain.
 
 ```elixir
-defmodule BitcoinAddress do
+defmodule BitcoinAddress.Primary do
   @moduledoc false
 
   def keypair do
@@ -96,8 +96,8 @@ end
 ```
 
 ```sh
-iex|1 ▶ BitcoinAddress.keypair |> elem(1)
-iex|2 ▶ BitcoinAddress.write
+iex|1 ▶ BitcoinAddress.Primary.keypair |> elem(1)
+iex|2 ▶ BitcoinAddress.Primary.write
 {
   ".keys/key",
   "8872CFBC3BFFEE5D190BB880C14D5528262982B4D57009061F12E3F60727DD92"
@@ -107,7 +107,7 @@ iex|2 ▶ BitcoinAddress.write
 The create private function by keypair, and a Map to result:
 
 ```elixir
-defmodule BitcoinAddress do
+defmodule BitcoinAddress.Primary do
   @moduledoc false
 
   @dir_keypair ".keys/key"
@@ -132,7 +132,7 @@ end
 ```
 
 ```sh
-iex|1 ▶ BitcoinAddress.write
+iex|1 ▶ BitcoinAddress.Primary.write
 %{
   dir: ".keys/key",
   key: "049DD8AFF80EBEAB210DF5C6A11DC19CE4E27E78854EB4E96A6F78EC9CB0E6F3"
@@ -176,7 +176,7 @@ end
 ```
 
 ```sh
-iex|1 ▶ BitcoinAddress.sign
+iex|1 ▶ BitcoinAddress.Primary.sign
 {
   :ok,
   <<48, 69, 2, 32, 24, 144, 0, 84, 121, 77, 110, 189, 49, 82, 103, 21,
@@ -220,7 +220,7 @@ end
 ```
 
 ```sh
-iex|1 ▶ BitcoinAddress.verify
+iex|1 ▶ BitcoinAddress.Primary.verify
 {:ok, false}
 ```
 
@@ -341,7 +341,7 @@ private_key
 Let's divide it into smaller steps and implement each part of it.
 
 ```elixir
-defmodule BitcoinAddress do
+defmodule BitcoinAddress.Primary do
   @moduledoc false
 
   @dir_keypair ".keys/key"
@@ -448,7 +448,7 @@ end
 ```
 
 ```sh
-iex|1 ▶ BitcoinAddress.to_public_key
+iex|1 ▶ BitcoinAddress.Primary.to_public_key
 {<<4, 223, 93, 86, 104, 6, 82, 243, 164, 17, 36, 42, 95, 215, 158, 17,
    150, 3, 200, 199, 228, 33, 56, 194, ...>>,
  "053A00A99FDF89DDAC42F33F59B2EE7321BCF8C3CECBA0E51D6FB9D500301B45"}
@@ -470,19 +470,19 @@ def hash(data, algorithm), do: :crypto.hash(algorithm, data)
 ```
 
 ```sh
-iex|1 ▶ public_key = BitcoinAddress.to_public_key |> elem(0)
+iex|1 ▶ public_key = BitcoinAddress.Primary.to_public_key |> elem(0)
 <<4, 223, 93, 86, 104, 6, 82, 243, 164, 17, 36, 42, 95, 215, 158, 17,
   150, 3, 200, 199, 228, 33, 56, 194, 66, ...>>
 iex|2 ▶ public_key |>
-        BitcoinAddress.hash(:sha256) |>
-        BitcoinAddress.hash(:ripemd160)
+        BitcoinAddress.Primary.hash(:sha256) |>
+        BitcoinAddress.Primary.hash(:ripemd160)
 <<22, 41, 219, 113, 107, 58, 170, 41, 136, 50, 26, 115, 88, 68, 113, 61,
   159, 122, 45, 154>>
 ```
 An examples with Hashes:
 
 ```elixir
-public_key = BitcoinAddress.to_public_key |> elem(0)
+public_key = BitcoinAddress.Primary.to_public_key |> elem(0)
 
 # To get the binary hash:
 :crypto.hash(:sha, public_key)
@@ -830,10 +830,11 @@ key* `160-bit` hash.  Just like you would ask others to send an email to
 your  email  address, you  can ask them to send Bitcoins to your Bitcoin
 Address.
 
-The entire repository with the code and tests is available here:
+The entire repository with the code and tests is available as module:
+`BitcoinAddress.Primary`
 
 ```elixir
-defmodule BitcoinAddress do
+defmodule BitcoinAddress.Primary do
   @moduledoc false
 
   @dir_keypair ".keys/key"
