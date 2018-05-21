@@ -9,4 +9,3 @@ defmodule BitcoinAddress.Base58 do
     |> Encode.call()
   end
 end
-

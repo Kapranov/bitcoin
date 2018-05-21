@@ -4,17 +4,20 @@ defmodule BitcoinAddress.Address do
   alias BitcoinAddress.Keys.Pair
   alias BitcoinAddress.Base58
 
-  @dir_keypair ".keys/key"
+  @dir_keypair ".keys/keys"
   @version_bytes %{
     main: <<0x00>>,
     test: <<0x6F>>
   }
 
   def create do
-    key = Pair.create
-    private_key = key |> elem(0)
-    with file_path = @dir_keypair, :ok <- File.write(file_path, private_key) do
-      %{"dir": file_path, "key": private_key}
+    keys = Pair.create
+    public_key  = keys |> elem(0)
+    private_key = keys |> elem(1)
+
+    with file_path = @dir_keypair, :ok <-
+        File.write(file_path, "#{[private_key, public_key] |> Enum.join(", ")}") do
+      %{"dir": file_path, "pri": private_key, "pub": public_key}
     else
       {:error, error} -> :file.format_error(error)
     end
@@ -31,7 +34,7 @@ defmodule BitcoinAddress.Address do
   end
 
   defp get_private_key do
-    File.read(".keys/key")
+    File.read(".keys/keys")
     |> Tuple.to_list
     |> List.delete(:ok)
     |> List.to_string

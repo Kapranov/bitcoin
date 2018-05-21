@@ -99,7 +99,7 @@ end
 iex|1 ▶ BitcoinAddress.Primary.keypair |> elem(1)
 iex|2 ▶ BitcoinAddress.Primary.write
 {
-  ".keys/key",
+  ".keys/keys",
   "8872CFBC3BFFEE5D190BB880C14D5528262982B4D57009061F12E3F60727DD92"
 }
 ```
@@ -110,7 +110,7 @@ The create private function by keypair, and a Map to result:
 defmodule BitcoinAddress.Primary do
   @moduledoc false
 
-  @dir_keypair ".keys/key"
+  @dir_keypair ".keys/keys"
 
   def write do
     private_key = keypair() |> elem(1)
@@ -134,7 +134,7 @@ end
 ```sh
 iex|1 ▶ BitcoinAddress.Primary.write
 %{
-  dir: ".keys/key",
+  dir: ".keys/keys",
   key: "049DD8AFF80EBEAB210DF5C6A11DC19CE4E27E78854EB4E96A6F78EC9CB0E6F3"
 }
 ```
@@ -158,7 +158,7 @@ signature = :crypto.sign(
 
 ```elixir
 def sign do
-  private_key = File.read(".keys/key")
+  private_key = File.read(".keys/keys")
                 |> Tuple.to_list
                 |> List.delete(:ok)
                 |> List.to_string
@@ -201,7 +201,7 @@ With  the  generated   *signature*  we  can  verify  if the owner of the
 
 ```elixir
 def verify do
-  public_key = File.read(".keys/key")
+  public_key = File.read(".keys/keys")
                |> Tuple.to_list
                |> List.delete(:ok)
                |> List.to_string
@@ -244,7 +244,7 @@ def write do
 end
 
 def sign do
-  private_key = File.read(".keys/key")
+  private_key = File.read(".keys/keys")
                 |> Tuple.to_list
                 |> List.delete(:ok)
                 |> List.to_string
@@ -263,7 +263,7 @@ def sign do
 end
 
 def verify do
-  public_key = File.read(".keys/key")
+  public_key = File.read(".keys/keys")
                |> Tuple.to_list
                |> List.delete(:ok)
                |> List.to_string
@@ -352,7 +352,7 @@ Let's divide it into smaller steps and implement each part of it.
 defmodule BitcoinAddress.Primary do
   @moduledoc false
 
-  @dir_keypair ".keys/key"
+  @dir_keypair ".keys/keys"
 
   def write do
     keys = keypair()
@@ -404,7 +404,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   defp get_private_key do
-    File.read(".keys/key")
+    File.read(".keys/keys")
     |> Tuple.to_list
     |> List.delete(:ok)
     |> List.to_string
@@ -413,7 +413,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   defp get_public_key do
-    File.read(".keys/key")
+    File.read(".keys/keys")
     |> Tuple.to_list
     |> List.delete(:ok)
     |> List.to_string
@@ -433,7 +433,7 @@ algorithm). To get it, it's enough to do:
 {public_key, _} = :crypto.generate_key(:ecdh, :secp256k1, private_key)
 ```
 ```sh
-iex|1 ▶ private_key = File.read(".keys/key") |>
+iex|1 ▶ private_key = File.read(".keys/keys") |>
 ...|1 ▶   Tuple.to_list |>
 ...|1 ▶   List.delete(:ok) |>
 ...|1 ▶   List.to_string |>
@@ -640,7 +640,7 @@ def check do
 end
 
 defp get_private_key do
-  File.read(".keys/key")
+  File.read(".keys/keys")
   |> Tuple.to_list
   |> List.delete(:ok)
   |> List.to_string
@@ -845,7 +845,7 @@ The entire repository with the code and tests is available as module:
 defmodule BitcoinAddress.Primary do
   @moduledoc false
 
-  @dir_keypair ".keys/key"
+  @dir_keypair ".keys/keys"
   @checksum_length 4
   @alphabet "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
   @length String.length(@alphabet)
@@ -864,6 +864,12 @@ defmodule BitcoinAddress.Primary do
       else
         {:error, error} -> :file.format_error(error)
       end
+  end
+
+  def read do
+    private_key = get_private_key()
+    public_key  = get_public_key()
+    %{"dir": @dir_keypair, "pri": private_key, "pub": public_key}
   end
 
   def sign do
@@ -934,7 +940,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   defp get_private_key do
-    File.read(".keys/key")
+    File.read(".keys/keys")
     |> Tuple.to_list
     |> List.delete(:ok)
     |> List.to_string
@@ -943,7 +949,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   defp get_public_key do
-    File.read(".keys/key")
+    File.read(".keys/keys")
     |> Tuple.to_list
     |> List.delete(:ok)
     |> List.to_string

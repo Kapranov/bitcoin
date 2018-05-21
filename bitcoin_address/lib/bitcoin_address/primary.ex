@@ -14,12 +14,20 @@ defmodule BitcoinAddress.Primary do
     keys = keypair()
     public_key  = keys |> elem(0)
     private_key = keys |> elem(1)
+
     with file_path = @dir_keypair,
       :ok <- File.write(file_path, "#{[private_key, public_key] |> Enum.join(", ")}") do
         %{"dir": file_path, "pri": private_key, "pub": public_key}
       else
         {:error, error} -> :file.format_error(error)
       end
+  end
+
+  def read do
+    private_key = get_private_key()
+    public_key  = get_public_key()
+
+    %{"dir": @dir_keypair, "pri": private_key, "pub": public_key}
   end
 
   def sign do
@@ -82,7 +90,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   defp get_private_key do
-    File.read(".keys/key")
+    File.read(".keys/keys")
     |> Tuple.to_list
     |> List.delete(:ok)
     |> List.to_string
@@ -91,7 +99,7 @@ defmodule BitcoinAddress.Primary do
   end
 
   defp get_public_key do
-    File.read(".keys/key")
+    File.read(".keys/keys")
     |> Tuple.to_list
     |> List.delete(:ok)
     |> List.to_string
@@ -110,7 +118,12 @@ defmodule BitcoinAddress.Primary do
   end
 
   defp to_public_key do
-    {public_key, args} = :crypto.generate_key(:ecdh, :secp256k1, get_private_key())
+    {public_key, args} = :crypto.generate_key(
+      :ecdh,
+      :secp256k1,
+      get_private_key()
+    )
+
     {public_key, args}
   end
 
