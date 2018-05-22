@@ -432,6 +432,7 @@ algorithm). To get it, it's enough to do:
 ```elixir
 {public_key, _} = :crypto.generate_key(:ecdh, :secp256k1, private_key)
 ```
+
 ```sh
 iex|1 ▶ private_key = File.read(".keys/keys") |>
 ...|1 ▶   Tuple.to_list |>
@@ -743,6 +744,7 @@ defp encode_zeros(input) do
   |> duplicate_zeros()
 end
 ```
+
 We  use `:binary.bin_to_list` from `erlang` to convert our binary into a
 list of bytes, and  `Enum.find_index` to find the first byte in our list
 that isn't zero. This index value is equivalent to the number of leading

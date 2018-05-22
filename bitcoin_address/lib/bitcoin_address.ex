@@ -6,6 +6,13 @@ defmodule BitcoinAddress do
   @type_algorithm :ecdh
   @ecdsa_curve :secp256k1
 
+  @n :binary.decode_unsigned(<<
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
+    0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
+    0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
+  >>)
+
   ###############################
   # CRUD DIRECTORY AND KEY FILE #
   ###############################
@@ -35,7 +42,7 @@ defmodule BitcoinAddress do
     end
   end
 
-  def update(private_key \\ generate_private_key(), public_key \\ "",
+  def update(private_key \\ encode_key(), public_key \\ "",
       directory \\ @directory_path, file \\ @file_name) do
     with file_path = Path.join(directory, file),
         :ok <- File.write(file_path, private_key),
@@ -65,6 +72,8 @@ defmodule BitcoinAddress do
     |> generate_key()
   end
 
+  ###############################
+
   defp keypair do
     with {public_key, private_key} <- generate(),
       do: {Base.encode16(public_key), Base.encode16(private_key)}
@@ -78,9 +87,22 @@ defmodule BitcoinAddress do
 
   defp generate_private_key do
     private_key = :crypto.strong_rand_bytes(32)
-    Base.encode16(private_key)
+
+    case valid?(private_key) do
+      true  -> private_key
+      false -> generate_private_key()
+    end
   end
 
+  defp valid?(key) when is_binary(key) do
+    key
+    |> :binary.decode_unsigned()
+    |> valid?
+  end
+
+  defp valid?(key) when key > 1 and key < @n, do: true
+  defp valid?(_), do: false
+  defp encode_key, do: generate_private_key() |> Base.encode16
   defp generate, do: :crypto.generate_key(@type_algorithm, @ecdsa_curve)
   defp get_private_key, do: read() |> Map.get(:pri)
   defp maybe_decode(true,  private_key), do: Base.decode16!(private_key)
