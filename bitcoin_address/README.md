@@ -1019,6 +1019,17 @@ defmodule BitcoinAddress.Primary do
 end
 ```
 
+## How to validate RSA-signed ECDHE public key?
+
+The full value to hash for example (with hex values in parentheses) is:
+
+```sh
+client_random (32 bytes) + server_random (32 bytes) + named_curve (0x03)
++ secp256r1_curve (0x0017) + length_of_public_key (0x41) +
+first_byte_of_key (0x04) + key_x_value + key_y_value
+```
+When I used this value the hash matched and the signature verified OK.
+
 ### 15 May 2018 by Oleg G.Kapranov
 
 [1]:  https://en.bitcoin.it/wiki/Address
@@ -1033,3 +1044,7 @@ end
 [10]: https://github.com/pcorey/hello_blockchain
 [11]: https://github.com/pcorey/hello_bitcoin
 [12]: https://github.com/pcorey/bitcoin_network
+[13]: http://andrea.corbellini.name/2015/05/17/elliptic-curve-cryptography-a-gentle-introduction/
+[14]: http://andrea.corbellini.name/2015/05/30/elliptic-curve-cryptography-ecdh-and-ecdsa/
+[15]: https://research.kudelskisecurity.com/2017/04/25/should-ecdh-keys-be-validated/
+[16]: https://iacr.org/archive/pkc2003/25670211/25670211.pdf

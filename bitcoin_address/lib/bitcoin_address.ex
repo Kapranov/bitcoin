@@ -13,6 +13,13 @@ defmodule BitcoinAddress do
     0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
   >>)
 
+  @p :binary.decode_unsigned(<<
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+     0xFF, 0xFF, 0xFF, 0xFe, 0xFF, 0xFF, 0xFC, 0x2F
+  >>)
+
   ###############################
   # CRUD DIRECTORY AND KEY FILE #
   ###############################
@@ -79,6 +86,17 @@ defmodule BitcoinAddress do
       do: {Base.encode16(public_key), Base.encode16(private_key)}
   end
 
+  defp generate do
+    {public_key, private_key} = :crypto.generate_key(@type_algorithm, @ecdsa_curve)
+
+    case valid?(private_key) do
+      true  -> private_key
+      false -> generate()
+    end
+
+    {public_key, private_key}
+  end
+
   defp generate_key(private_key) do
     with {public_key, _private_key} <-
         :crypto.generate_key(@type_algorithm, @ecdsa_curve, private_key),
@@ -89,7 +107,7 @@ defmodule BitcoinAddress do
     private_key = :crypto.strong_rand_bytes(32)
 
     case valid?(private_key) do
-      true  -> private_key
+      true -> private_key
       false -> generate_private_key()
     end
   end
@@ -103,7 +121,6 @@ defmodule BitcoinAddress do
   defp valid?(key) when key > 1 and key < @n, do: true
   defp valid?(_), do: false
   defp encode_key, do: generate_private_key() |> Base.encode16
-  defp generate, do: :crypto.generate_key(@type_algorithm, @ecdsa_curve)
   defp get_private_key, do: read() |> Map.get(:pri)
   defp maybe_decode(true,  private_key), do: Base.decode16!(private_key)
   defp maybe_decode(false, private_key), do: private_key
