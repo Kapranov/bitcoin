@@ -90,6 +90,13 @@ defmodule BitcoinAddress do
     end
   end
 
+  def to_public_hash(private_key \\ get_private_key()) do
+    private_key
+    |> to_public_key()
+    |> hash(:sha256)
+    |> hash(:ripemd160)
+  end
+
   ###############################
 
   defp keypair do
@@ -137,4 +144,5 @@ defmodule BitcoinAddress do
   defp maybe_decode(false, private_key), do: private_key
   defp maybe_create_directory(directory), do: File.mkdir_p(directory)
   defp translate(error), do: :file.format_error(error)
+  defp hash(data, algorithm), do: :crypto.hash(algorithm, data)
 end
