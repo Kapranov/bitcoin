@@ -6,18 +6,16 @@ defmodule BitcoinAddress do
   @type_algorithm :ecdh
   @ecdsa_curve :secp256k1
 
+  @version_bytes %{
+    main: <<0x00>>,
+    test: <<0x6F>>
+  }
+
   @n :binary.decode_unsigned(<<
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
     0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
     0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
-  >>)
-
-  @p :binary.decode_unsigned(<<
-     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-     0xFF, 0xFF, 0xFF, 0xFe, 0xFF, 0xFF, 0xFC, 0x2F
   >>)
 
   ###############################
@@ -69,7 +67,7 @@ defmodule BitcoinAddress do
   end
 
   ###############################
-  # Generate Private Public Key #
+  # Generate Private  PublicKey #
   ###############################
 
   def to_public_key(private_key \\ get_private_key()) do
@@ -78,6 +76,10 @@ defmodule BitcoinAddress do
     |> maybe_decode(private_key)
     |> generate_key()
   end
+
+  ###############################
+  # Generate Compress PublicKey #
+  ###############################
 
   def to_compressed_public_key(private_key \\ get_private_key()) do
     {<<0x04, x::binary-size(32), y::binary-size(32)>>, _} =
@@ -90,11 +92,24 @@ defmodule BitcoinAddress do
     end
   end
 
+  ###############################
+  # Generate  PublicKey to hash #
+  ###############################
+
   def to_public_hash(private_key \\ get_private_key()) do
     private_key
     |> to_public_key()
     |> hash(:sha256)
     |> hash(:ripemd160)
+  end
+
+  ###############################
+  # Generate  Bitcoin   Address #
+  ###############################
+
+  def to_public_address(private_key \\ get_private_key(), version \\ :main) do
+    private_key
+    |> to_public_hash()
   end
 
   ###############################
