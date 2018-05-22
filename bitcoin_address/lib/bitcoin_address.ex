@@ -79,6 +79,17 @@ defmodule BitcoinAddress do
     |> generate_key()
   end
 
+  def to_compressed_public_key(private_key \\ get_private_key()) do
+    {<<0x04, x::binary-size(32), y::binary-size(32)>>, _} =
+      :crypto.generate_key(:ecdh, :crypto.ec_curve(:secp256k1), private_key)
+
+    if rem(:binary.decode_unsigned(y), 2) == 0 do
+      <<0x02>> <> x
+    else
+      <<0x03>> <> x
+    end
+  end
+
   ###############################
 
   defp keypair do
