@@ -37,7 +37,11 @@ defmodule BitcoinAddress do
         :ok <- maybe_create_directory(directory),
         :ok <- File.write(file_path, private_key),
         :ok <- File.write("#{file_path}.pub", public_key) do
-      %{"dir": file_path, "pri": private_key, "pub": public_key}
+      %{
+        "dir": [file_path,"#{file_path}.pub"],
+        "pri": private_key,
+        "pub": public_key
+      }
     else
       {:error, error} -> translate(error)
     end
@@ -47,7 +51,11 @@ defmodule BitcoinAddress do
     with file_path = Path.join(directory, file),
         {:ok, private_key} <- File.read(file_path),
         {:ok, public_key} <- File.read("#{file_path}.pub") do
-      %{"pri": private_key, "pub": public_key}
+      %{
+        "dir": [file_path,"#{file_path}.pub"],
+        "pri": private_key,
+        "pub": public_key
+      }
     else
       {:error, error} -> translate(error)
     end
@@ -58,7 +66,11 @@ defmodule BitcoinAddress do
     with file_path = Path.join(directory, file),
         :ok <- File.write(file_path, private_key),
         :ok <- File.write("#{file_path}.pub", public_key) do
-      %{"dir": file_path, "pri": private_key, "pub": public_key}
+      %{
+        "dir": [file_path,"#{file_path}.pub"],
+        "pri": private_key,
+        "pub": public_key
+      }
     else
       {:error, error} -> translate(error)
     end
@@ -139,7 +151,10 @@ defmodule BitcoinAddress do
   end
 
   defp generate do
-    {public_key, private_key} = :crypto.generate_key(@type_algorithm, @ecdsa_curve)
+    {public_key, private_key} = :crypto.generate_key(
+      @type_algorithm,
+      @ecdsa_curve
+    )
 
     case valid?(private_key) do
       true  -> private_key
@@ -182,6 +197,7 @@ defmodule BitcoinAddress do
 end
 
 defmodule Base58 do
+  @moduledoc false
   @alphabet '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
   #################################################################
@@ -209,12 +225,13 @@ defmodule Base58 do
   end
 
   defp leading_zeros(data) do
-    :binary.bin_to_list(data)
-    |> Enum.find_index(&(&1 != 0))
+    zeros = :binary.bin_to_list(data)
+    zeros |> Enum.find_index(&(&1 != 0))
   end
 end
 
 defmodule Base58Check do
+  @moduledoc false
 
   #################################################################
   # Base58Check  encoding  is  really  just  Base58 with an added #
