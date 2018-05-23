@@ -167,3 +167,20 @@ defmodule BitcoinAddress do
     |> Kernel.<>(public_hash)
   end
 end
+
+defmodule Base58 do
+  @alphabet '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
+  def encode(data, hash \\ "")
+
+  def encode(data, hash) when is_binary(data) do
+    encode(:binary.decode_unsigned(data), hash)
+  end
+
+  def encode(0, hash), do: hash
+
+  def encode(data, hash) do
+    character = <<Enum.at(@alphabet, rem(data, 58))>>
+    encode(div(data, 58), hash <> character)
+  end
+end
