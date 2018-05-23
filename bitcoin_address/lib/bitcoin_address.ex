@@ -17,9 +17,16 @@ defmodule BitcoinAddress do
     0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
   >>)
 
-  ##################################
-  # CRUD Create Directory Key file #
-  ##################################
+  #################################################################
+  # Create Directory, CRUD are Keys files for Public, Private Key #
+  # A Bitcoin private key is really just  a random  two  hundred  #
+  # fifty  six  bit  number. As  the name implies, this number is #
+  # intended  to  be  kept  private.  From  each  private  key,   #
+  # a public-facing Bitcoin address can be generated. Bitcoin can #
+  # be sent to this public address by anyone in the world.However #
+  # only the  keeper  of  the private key can produce a signature #
+  # that allows them to access the Bitcoin stored there.          #
+  #################################################################
 
   def create(directory \\ @directory_path, file \\ @file_name) do
     keys = keypair()
@@ -65,9 +72,16 @@ defmodule BitcoinAddress do
     end
   end
 
-  ##################################
-  #   Generate Private  PublicKey  #
-  ##################################
+  #################################################################
+  # Generate Public Key by Private Key.                           #
+  # Bitcoin private key is really just  a random two  hundred and #
+  # fifty six  bit  number. In other words, a private key  can be #
+  # any number between 0 and 2^256.                               #
+  # The most basic process for turning a Bitcoin private key into #
+  # a sharable public address involves three basic steps.         #
+  # The first step  is to transform our private key into a public #
+  # key with the help of elliptic curve cryptography.             #
+  #################################################################
 
   def to_public_key(private_key \\ get_private_key()) do
     private_key
@@ -76,9 +90,9 @@ defmodule BitcoinAddress do
     |> generate_key()
   end
 
-  ##################################
-  #   Generate Compress PublicKey  #
-  ##################################
+  #################################################################
+  # Generate Compress Public Key                                  #
+  #################################################################
 
   def to_compressed_public_key(private_key \\ get_private_key()) do
     {<<0x04, x::binary-size(32), y::binary-size(32)>>, _} =
@@ -91,9 +105,11 @@ defmodule BitcoinAddress do
     end
   end
 
-  ##################################
-  #   Generate  PublicKey to Hash  #
-  ##################################
+  #################################################################
+  # Generate Public Key to Public Hash. We have our public key in #
+  # memory our next step in transforming it into a public address #
+  # is to hash it.                                                #
+  #################################################################
 
   def to_public_hash(private_key \\ get_private_key()) do
     private_key
@@ -102,17 +118,20 @@ defmodule BitcoinAddress do
     |> hash(:ripemd160)
   end
 
-  ##################################
-  #     Generate Bitcoin Address   #
-  ##################################
+  #################################################################
+  # Generate Bitcoin Address - Public Hash to Public Address.     #
+  # We  can  convert our  public hash into a full-fledged Bitcoin #
+  # address  by Base58Check encoding the hash with a version byte #
+  # corresponding to the network where we're using the address.   #
+  #################################################################
 
-  def to_public_address(private_key \\ get_private_key(), version \\ :main) do
+  def to_public_address(private_key \\ get_private_key(), version \\ @version_bytes.main) do
     private_key
     |> to_public_hash()
-    |> prepend_version_byte(version)
+    |> Base58Check.encode(version)
   end
 
-  ##################################
+  #################################################################
 
   defp keypair do
     with {public_key, private_key} <- generate(),
@@ -160,16 +179,16 @@ defmodule BitcoinAddress do
   defp maybe_create_directory(directory), do: File.mkdir_p(directory)
   defp translate(error), do: :file.format_error(error)
   defp hash(data, algorithm), do: :crypto.hash(algorithm, data)
-
-  defp prepend_version_byte(public_hash, version) do
-    @version_bytes
-    |> Map.get(version)
-    |> Kernel.<>(public_hash)
-  end
 end
 
 defmodule Base58 do
   @alphabet '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
+  #################################################################
+  # Base58 is a binary-to-text encoding algorithm that's designed #
+  # to encode a blob of arbitrary binary data into human readable #
+  # text, much like the more well known Base64 algorithm.         #
+  #################################################################
 
   def encode(data, hash \\ "")
 
@@ -195,5 +214,32 @@ defmodule Base58 do
   end
 end
 
-defmodule Base58Check
+defmodule Base58Check do
+
+  #################################################################
+  # Base58Check  encoding  is  really  just  Base58 with an added #
+  # checksum. This checksum is important to in  the Bitcoin world #
+  # to ensure that public addresses aren't mistyped  or corrupted #
+  # before funds are exchanged.                                   #
+  #                                                               #
+  # At a high level, the process of Base58Check  encoding  a blob #
+  # of  binary  data involves hashing that data, taking the first #
+  # four  bytes of  the  resulting hash and appending them to the #
+  # end of the binary, and Base58 encoding the result.            #
+  #################################################################
+
+  def encode(data, version) do
+    (version <> data <> checksum(data, version))
+    |> Base58.encode()
+  end
+
+  defp checksum(data, version) do
+    (version <> data)
+    |> sha256
+    |> sha256
+    |> split
+  end
+
+  defp split(<<hash::bytes-size(4), _::bits>>), do: hash
+  defp sha256(data), do: :crypto.hash(:sha256, data)
 end
