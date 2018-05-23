@@ -194,3 +194,6 @@ defmodule Base58 do
     |> Enum.find_index(&(&1 != 0))
   end
 end
+
+defmodule Base58Check
+end
