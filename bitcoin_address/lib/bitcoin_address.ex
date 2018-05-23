@@ -5,7 +5,6 @@ defmodule BitcoinAddress do
   @file_name "key"
   @type_algorithm :ecdh
   @ecdsa_curve :secp256k1
-
   @version_bytes %{
     main: <<0x00>>,
     test: <<0x6F>>
@@ -18,9 +17,9 @@ defmodule BitcoinAddress do
     0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
   >>)
 
-  ###############################
-  # CRUD DIRECTORY AND KEY FILE #
-  ###############################
+  ##################################
+  # CRUD Create Directory Key file #
+  ##################################
 
   def create(directory \\ @directory_path, file \\ @file_name) do
     keys = keypair()
@@ -66,9 +65,9 @@ defmodule BitcoinAddress do
     end
   end
 
-  ###############################
-  # Generate Private  PublicKey #
-  ###############################
+  ##################################
+  #   Generate Private  PublicKey  #
+  ##################################
 
   def to_public_key(private_key \\ get_private_key()) do
     private_key
@@ -77,9 +76,9 @@ defmodule BitcoinAddress do
     |> generate_key()
   end
 
-  ###############################
-  # Generate Compress PublicKey #
-  ###############################
+  ##################################
+  #   Generate Compress PublicKey  #
+  ##################################
 
   def to_compressed_public_key(private_key \\ get_private_key()) do
     {<<0x04, x::binary-size(32), y::binary-size(32)>>, _} =
@@ -92,9 +91,9 @@ defmodule BitcoinAddress do
     end
   end
 
-  ###############################
-  # Generate  PublicKey to hash #
-  ###############################
+  ##################################
+  #   Generate  PublicKey to Hash  #
+  ##################################
 
   def to_public_hash(private_key \\ get_private_key()) do
     private_key
@@ -103,16 +102,17 @@ defmodule BitcoinAddress do
     |> hash(:ripemd160)
   end
 
-  ###############################
-  # Generate  Bitcoin   Address #
-  ###############################
+  ##################################
+  #     Generate Bitcoin Address   #
+  ##################################
 
   def to_public_address(private_key \\ get_private_key(), version \\ :main) do
     private_key
     |> to_public_hash()
+    |> prepend_version_byte(version)
   end
 
-  ###############################
+  ##################################
 
   defp keypair do
     with {public_key, private_key} <- generate(),
@@ -140,7 +140,7 @@ defmodule BitcoinAddress do
     private_key = :crypto.strong_rand_bytes(32)
 
     case valid?(private_key) do
-      true -> private_key
+      true  -> private_key
       false -> generate_private_key()
     end
   end
@@ -160,4 +160,10 @@ defmodule BitcoinAddress do
   defp maybe_create_directory(directory), do: File.mkdir_p(directory)
   defp translate(error), do: :file.format_error(error)
   defp hash(data, algorithm), do: :crypto.hash(algorithm, data)
+
+  defp prepend_version_byte(public_hash, version) do
+    @version_bytes
+    |> Map.get(version)
+    |> Kernel.<>(public_hash)
+  end
 end
